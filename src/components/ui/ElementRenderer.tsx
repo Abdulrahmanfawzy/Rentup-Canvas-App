@@ -2101,7 +2101,6 @@ export const ElementRenderer = forwardRef<any, Props>(
         );
       }
 
-
       case "icon": {
         const [iconImage] = useImage(`https://api.iconify.design/${element.iconName}.svg`);
 

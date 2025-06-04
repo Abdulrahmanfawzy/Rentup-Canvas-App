@@ -38,8 +38,8 @@ const initialState: CanvasState = {
 
 let shapeIdCounter = 1;
 
-const createBaseElement = (): Omit<CanvasElement, "type"> => ({
-  id: String(shapeIdCounter++),
+const createBaseElement = (id: string): Omit<CanvasElement, "type"> => ({
+  id,
   x: 100,
   y: 100,
   width: 150,
@@ -63,14 +63,15 @@ const canvasSlice = createSlice({
     addElement: (
   state,
   action: PayloadAction<| { type: "icon"; iconName: string } | { type: Exclude<ElementType, "icon"> }>) => {
-      const base = createBaseElement();
+      const currentId = shapeIdCounter++;
+      const base = createBaseElement(String(currentId));
       let newElement: CanvasElement;
 
       switch (action.payload.type) {
         case "text":
           newElement = {
             ...base,
-            id: nanoid(),
+            id: `text-${currentId}`,
             fontSize_percent: 2.5,
             text: "Edit Me Now...",
             fill: "#524C4C", // background rect
@@ -108,6 +109,7 @@ const canvasSlice = createSlice({
             dash: [5, 5],
             assetType: "frame",
             label: "",
+            frame_position: "",
             tags: [],
           } as CanvasElement;
           break;
