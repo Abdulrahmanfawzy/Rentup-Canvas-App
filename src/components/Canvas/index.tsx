@@ -103,7 +103,7 @@ export function Canvas() {
       ref={stageRef}
       width={stageWidth}
       height={stageHeight}
-      style={{ border: "1px solid #ccc", cursor }}
+      style={{ cursor }}
       onMouseDown={handleStageClick}
       onWheel={handleWheel}
       draggable={stageRef.current?.scaleX() > 1}

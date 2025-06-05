@@ -26,7 +26,6 @@ import type {
   WedgeShape,
   RingShape,
   CanvasElement,
-  CanvasFrameElement,
 } from "../../features/canvas/types";
 import { useSelector } from "react-redux";
 import useImage from "use-image";
@@ -47,6 +46,11 @@ interface Props {
   onChange: (updates: Partial<CanvasElementUnion>) => void;
 }
 type KonvaText = InstanceType<typeof Konva.Text>;
+interface RootState {
+  canvas: {
+    elements: CanvasElement[];
+  };
+}
 
 // Update the ElementRenderer to apply stroke and strokeWidth to all shapes
 export const ElementRenderer = forwardRef<any, Props>(
@@ -93,10 +97,12 @@ export const ElementRenderer = forwardRef<any, Props>(
         const refText = useRef<KonvaText>(null);
         const [bgSize, setBgSize] = useState({ width: 0, height: 0 });
         const trRef = useRef<Konva.Transformer>(null);
-        const [isSelected, setIsSelected] = useState(false);
+        // const [isSelected, setIsSelected] = useState(false);
         const [isEditing, setIsEditing] = useState(false);
         const [editableText, setEditableText] = useState(textElement.text);
-
+        const isSelected = useSelector((state:RootState) =>
+          state.canvas.elements.find((el) => el.id === textElement.id)?.selected
+        );
         const textAlign = useSelector(
           (state: any) =>
             state.canvas.elements.find((el: any) => el.id === textElement.id)
@@ -177,7 +183,6 @@ export const ElementRenderer = forwardRef<any, Props>(
         }, [isSelected, isEditing]);
 
         const handleSelect = (e: Konva.KonvaEventObject<MouseEvent>) => {
-          setIsSelected(true);
           if (onSelect) onSelect(e, textElement.id as string); // تأكد إن `id` هو string
         };
 
@@ -524,6 +529,7 @@ export const ElementRenderer = forwardRef<any, Props>(
       //   );
       // }
 
+      // ودا كود فيه كل حاجة انا عايزها بس من غير تحريك الصورة مع الفريم.
       // case "image": {
       //   const [image] = useImage(element.src || "");
       //   const frame = elements.find(
@@ -1038,557 +1044,6 @@ export const ElementRenderer = forwardRef<any, Props>(
       //   );
       // }
 
-    //   case "frame": {
-    //   // Find if there's an image associated with this frame
-    //   const imageInFrame = elements.find(
-    //     (el) => el.type === "image" && el.frameId === element.id
-    //   );
-
-    //   // If there's an image, skip rendering the frame here as it will be rendered in the image case
-    //   if (imageInFrame) {
-    //     return null;
-    //   }
-
-    //   // Render standalone frame
-    //   return (
-    //     <Rect
-    //       ref={ref}
-    //       x={element.x}
-    //       y={element.y}
-    //       width={element.width}
-    //       height={element.height}
-    //       fill={element.fill}
-    //       dash={[4, 4]}
-    //       stroke={element.stroke}
-    //       strokeWidth={element.strokeWidth}
-    //       rotation={element.rotation}
-    //       draggable
-    //       onClick={onSelect}
-    //       onDragMove={(e) => {
-    //         const node = e.target;
-    //         const newX = node.x();
-    //         const newY = node.y();
-
-    //         dispatch(
-    //           updateElement({
-    //             id: element.id,
-    //             updates: {
-    //               x: newX,
-    //               y: newY,
-    //               width_percent: toPercent(element.width, stageWidth),
-    //               height_percent: toPercent(element.height, stageHeight),
-    //               x_percent: toPercent(newX, stageWidth),
-    //               y_percent: toPercent(newY, stageHeight),
-    //             },
-    //           })
-    //         );
-    //       }}
-    //       onTransform={(e) => {
-    //         const node = e.target;
-    //         const newWidth = node.width() * node.scaleX();
-    //         const newHeight = node.height() * node.scaleY();
-
-    //         onChange({
-    //           x: node.x(),
-    //           y: node.y(),
-    //           width: newWidth,
-    //           height: newHeight,
-    //           rotation: node.rotation(),
-    //           width_percent: toPercent(newWidth, stageWidth),
-    //           height_percent: toPercent(newHeight, stageHeight),
-    //           x_percent: toPercent(node.x(), stageWidth),
-    //           y_percent: toPercent(node.y(), stageHeight),
-    //         });
-
-    //         node.scaleX(1);
-    //         node.scaleY(1);
-    //       }}
-    //     />
-    //   );
-    // }
-
-    // case "image": {
-    //   const [image] = useImage(element.src || "");
-    //   const frame = elements.find(
-    //     (f) => f.id === element.frameId
-    //   );
-    //   const wasOverFrameRef = useRef(false);
-    //   const [currentFitMode, setCurrentFitMode] = useState(
-    //     element.fitMode || "fill"
-    //   );
-
-    //   const applyFitMode = (
-    //     newFitMode: string,
-    //     targetFrame: CanvasElement
-    //   ) => {
-    //     const frameAspect = targetFrame.width / targetFrame.height;
-    //     const imgAspect = element.width / element.height;
-
-    //     let newWidth, newHeight, offsetX, offsetY;
-
-    //     switch (newFitMode) {
-    //       case "fit":
-    //         if (imgAspect > frameAspect) {
-    //           newWidth = targetFrame.width;
-    //           newHeight = targetFrame.width / imgAspect;
-    //         } else {
-    //           newHeight = targetFrame.height;
-    //           newWidth = targetFrame.height * imgAspect;
-    //         }
-    //         break;
-
-    //       case "fill":
-    //         if (imgAspect < frameAspect) {
-    //           newWidth = targetFrame.width;
-    //           newHeight = targetFrame.width / imgAspect;
-    //         } else {
-    //           newHeight = targetFrame.height;
-    //           newWidth = targetFrame.height * imgAspect;
-    //         }
-    //         break;
-
-    //       case "stretch":
-    //         newWidth = targetFrame.width;
-    //         newHeight = targetFrame.height;
-    //         break;
-
-    //       default:
-    //         if (imgAspect < frameAspect) {
-    //           newWidth = targetFrame.width;
-    //           newHeight = targetFrame.width / imgAspect;
-    //         } else {
-    //           newHeight = targetFrame.height;
-    //           newWidth = targetFrame.height * imgAspect;
-    //         }
-    //         break;
-    //     }
-
-    //     offsetX = (targetFrame.width - newWidth) / 2;
-    //     offsetY = (targetFrame.height - newHeight) / 2;
-
-    //     onChange({
-    //       x: targetFrame.x + offsetX,
-    //       y: targetFrame.y + offsetY,
-    //       width: newWidth,
-    //       height: newHeight,
-    //       frameId: targetFrame.id,
-    //       fitMode: newFitMode,
-    //       width_percent: toPercent(newWidth, stageWidth),
-    //       height_percent: toPercent(newHeight, stageHeight),
-    //       x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
-    //       y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
-    //     });
-    //   };
-
-    //   if (frame) {
-    //     return (
-    //       <>
-    //         <Group
-    //           x={frame.x}
-    //           y={frame.y}
-    //           rotation={frame.rotation}
-    //           draggable
-    //           onClick={onSelect}
-    //           onDragMove={(e) => {
-    //             const node = e.target;
-    //             const newX = node.x();
-    //             const newY = node.y();
-
-    //             // Update frame position
-    //             dispatch(
-    //               updateElement({
-    //                 id: frame.id,
-    //                 updates: {
-    //                   x: newX,
-    //                   y: newY,
-    //                   width_percent: toPercent(frame.width, stageWidth),
-    //                   height_percent: toPercent(frame.height, stageHeight),
-    //                   x_percent: toPercent(newX, stageWidth),
-    //                   y_percent: toPercent(newY, stageHeight),
-    //                 },
-    //               })
-    //             );
-
-    //             // Update image position (maintain offset)
-    //             const offsetX = element.x - frame.x;
-    //             const offsetY = element.y - frame.y;
-    //             const newImageX = newX + offsetX;
-    //             const newImageY = newY + offsetY;
-
-    //             dispatch(
-    //               updateElement({
-    //                 id: element.id,
-    //                 updates: {
-    //                   x: newImageX,
-    //                   y: newImageY,
-    //                   width_percent: toPercent(element.width, stageWidth),
-    //                   height_percent: toPercent(element.height, stageHeight),
-    //                   x_percent: toPercent(newImageX, stageWidth),
-    //                   y_percent: toPercent(newImageY, stageHeight),
-    //                 },
-    //               })
-    //             );
-    //           }}
-    //           onTransform={(e) => {
-    //             const node = e.target;
-    //             const newWidth = node.width() * node.scaleX();
-    //             const newHeight = node.height() * node.scaleY();
-    //             const scaleX = newWidth / frame.width;
-    //             const scaleY = newHeight / frame.height;
-
-    //             // Update frame
-    //             dispatch(
-    //               updateElement({
-    //                 id: frame.id,
-    //                 updates: {
-    //                   x: node.x(),
-    //                   y: node.y(),
-    //                   width: newWidth,
-    //                   height: newHeight,
-    //                   rotation: node.rotation(),
-    //                   width_percent: toPercent(newWidth, stageWidth),
-    //                   height_percent: toPercent(newHeight, stageHeight),
-    //                   x_percent: toPercent(node.x(), stageWidth),
-    //                   y_percent: toPercent(node.y(), stageHeight),
-    //                 },
-    //               })
-    //             );
-
-    //             // Update image (scale and center)
-    //             const newImgWidth = element.width * scaleX;
-    //             const newImgHeight = element.height * scaleY;
-    //             const newImgX = node.x() + (newWidth - newImgWidth) / 2;
-    //             const newImgY = node.y() + (newHeight - newImgHeight) / 2;
-
-    //             dispatch(
-    //               updateElement({
-    //                 id: element.id,
-    //                 updates: {
-    //                   x: newImgX,
-    //                   y: newImgY,
-    //                   width: newImgWidth,
-    //                   height: newImgHeight,
-    //                   rotation: node.rotation(),
-    //                   width_percent: toPercent(newImgWidth, stageWidth),
-    //                   height_percent: toPercent(newImgHeight, stageHeight),
-    //                   x_percent: toPercent(newImgX, stageWidth),
-    //                   y_percent: toPercent(newImgY, stageHeight),
-    //                 },
-    //               })
-    //             );
-
-    //             node.scaleX(1);
-    //             node.scaleY(1);
-    //           }}
-    //         >
-    //           <Rect
-    //             x={0}
-    //             y={0}
-    //             width={frame.width}
-    //             height={frame.height}
-    //             fill={frame.fill}
-    //             dash={[4, 4]}
-    //             stroke={frame.stroke}
-    //             strokeWidth={frame.strokeWidth}
-    //           />
-    //           <KonvaImage
-    //             ref={ref}
-    //             image={image}
-    //             x={element.x - frame.x} // Relative to group
-    //             y={element.y - frame.y} // Relative to group
-    //             width={element.width}
-    //             height={element.height}
-    //             clipFunc={(ctx) => {
-    //               ctx.rect(0, 0, frame.width, frame.height);
-    //             }}
-    //           />
-    //         </Group>
-
-    //         {element.isSelected && (
-    //           <div
-    //             style={{
-    //               position: "absolute",
-    //               top: 10,
-    //               left: 10,
-    //               zIndex: 1000,
-    //             }}
-    //           >
-    //             <select
-    //               value={currentFitMode}
-    //               onChange={(e) => {
-    //                 setCurrentFitMode(e.target.value);
-    //                 if (frame) {
-    //                   applyFitMode(e.target.value, frame);
-    //                 }
-    //               }}
-    //             >
-    //               <option value="fit">Fit</option>
-    //               <option value="fill">Fill</option>
-    //               <option value="stretch">Stretch</option>
-    //             </select>
-    //           </div>
-    //         )}
-    //       </>
-    //     );
-    //   }
-
-    //   // Image without a frame
-    //   return (
-    //     <>
-    //       <KonvaImage
-    //         ref={ref}
-    //         image={image}
-    //         x={element.x}
-    //         y={element.y}
-    //         width={element.width}
-    //         height={element.height}
-    //         draggable
-    //         onClick={() => {
-    //           if (onSelect) {
-    //             onSelect();
-    //           }
-    //         }}
-    //         onDragMove={(e) => {
-    //           const imageNode = e.target;
-    //           const imgX = imageNode.x();
-    //           const imgY = imageNode.y();
-    //           const imgW = imageNode.width();
-    //           const imgH = imageNode.height();
-
-    //           dispatch(
-    //             updateElement({
-    //               id: element.id,
-    //               updates: {
-    //                 x: imgX,
-    //                 y: imgY,
-    //                 width_percent: toPercent(imgW, stageWidth),
-    //                 height_percent: toPercent(imgH, stageHeight),
-    //                 x_percent: toPercent(imgX, stageWidth),
-    //                 y_percent: toPercent(imgY, stageHeight),
-    //               },
-    //             })
-    //           );
-
-    //           const frames = elements
-    //             .filter(
-    //               (el) =>
-    //                 el.type === "frame" &&
-    //                 imgX + imgW / 2 >= el.x &&
-    //                 imgX + imgW / 2 <= el.x + el.width &&
-    //                 imgY + imgH / 2 >= el.y &&
-    //                 imgY + imgH / 2 <= el.y + el.height
-    //             )
-    //             .sort(
-    //               (a, b) => elements.indexOf(b) - elements.indexOf(a)
-    //             );
-
-    //           const targetFrame = frames[0];
-
-    //           if (!targetFrame) {
-    //             wasOverFrameRef.current = false;
-    //             return;
-    //           }
-
-    //           const isAlreadyHasImage = elements.some(
-    //             (el) =>
-    //               el.type === "image" &&
-    //               el.frameId === targetFrame.id &&
-    //               el.id !== element.id
-    //           );
-
-    //           if (isAlreadyHasImage) {
-    //             return;
-    //           }
-
-    //           if (!wasOverFrameRef.current) {
-    //             const frameAspect = targetFrame.width / targetFrame.height;
-    //             const imgAspect = imgW / imgH;
-
-    //             let newWidth, newHeight, offsetX, offsetY;
-
-    //             switch (currentFitMode) {
-    //               case "fit":
-    //                 if (imgAspect > frameAspect) {
-    //                   newWidth = targetFrame.width;
-    //                   newHeight = targetFrame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = targetFrame.height;
-    //                   newWidth = targetFrame.height * imgAspect;
-    //                 }
-    //                 break;
-
-    //               case "fill":
-    //                 if (imgAspect < frameAspect) {
-    //                   newWidth = targetFrame.width;
-    //                   newHeight = targetFrame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = targetFrame.height;
-    //                   newWidth = targetFrame.height * imgAspect;
-    //                 }
-    //                 break;
-
-    //               case "stretch":
-    //                 newWidth = targetFrame.width;
-    //                 newHeight = targetFrame.height;
-    //                 break;
-
-    //               default:
-    //                 if (imgAspect < frameAspect) {
-    //                   newWidth = targetFrame.width;
-    //                   newHeight = targetFrame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = targetFrame.height;
-    //                   newWidth = targetFrame.height * imgAspect;
-    //                 }
-    //                 break;
-    //             }
-
-    //             offsetX = (targetFrame.width - newWidth) / 2;
-    //             offsetY = (targetFrame.height - newHeight) / 2;
-
-    //             onChange({
-    //               x: targetFrame.x + offsetX,
-    //               y: targetFrame.y + offsetY,
-    //               width: newWidth,
-    //               height: newHeight,
-    //               frameId: targetFrame.id,
-    //               fitMode: currentFitMode,
-    //               width_percent: toPercent(newWidth, stageWidth),
-    //               height_percent: toPercent(newHeight, stageHeight),
-    //               x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
-    //               y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
-    //             });
-
-    //             wasOverFrameRef.current = true;
-    //           }
-    //         }}
-    //         onDragEnd={(e) => {
-    //           const img = e.target;
-    //           const imgW = img.width();
-    //           const imgH = img.height();
-
-    //           const centerX = img.x() + imgW / 2;
-    //           const centerY = img.y() + imgH / 2;
-
-    //           const frames = elements
-    //             .filter(
-    //               (el) =>
-    //                 el.type === "frame" &&
-    //                 centerX >= el.x &&
-    //                 centerX <= el.x + el.width &&
-    //                 centerY >= el.y &&
-    //                 centerY <= el.y + el.height
-    //             )
-    //             .sort(
-    //               (a, b) => elements.indexOf(b) - elements.indexOf(a)
-    //             );
-
-    //           const frame = frames[0];
-
-    //           if (frame) {
-    //             const isAlreadyHasImage = elements.some(
-    //               (el) =>
-    //                 el.type === "image" &&
-    //                 el.frameId === frame.id &&
-    //                 el.id !== element.id
-    //             );
-
-    //             if (isAlreadyHasImage) {
-    //               onChange({ x: img.x(), y: img.y(), frameId: null });
-    //               wasOverFrameRef.current = false;
-    //               return;
-    //             }
-
-    //             const frameAspect = frame.width / frame.height;
-    //             const imgAspect = imgW / imgH;
-
-    //             let newWidth, newHeight, offsetX, offsetY;
-
-    //             switch (currentFitMode) {
-    //               case "fit":
-    //                 if (imgAspect > frameAspect) {
-    //                   newWidth = frame.width;
-    //                   newHeight = frame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = frame.height;
-    //                   newWidth = frame.height * imgAspect;
-    //                 }
-    //                 break;
-
-    //               case "fill":
-    //                 if (imgAspect < frameAspect) {
-    //                   newWidth = frame.width;
-    //                   newHeight = frame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = frame.height;
-    //                   newWidth = frame.height * imgAspect;
-    //                 }
-    //                 break;
-
-    //               case "stretch":
-    //                 newWidth = frame.width;
-    //                 newHeight = frame.height;
-    //                 break;
-
-    //               default:
-    //                 if (imgAspect < frameAspect) {
-    //                   newWidth = frame.width;
-    //                   newHeight = frame.width / imgAspect;
-    //                 } else {
-    //                   newHeight = frame.height;
-    //                   newWidth = frame.height * imgAspect;
-    //                 }
-    //                 break;
-    //             }
-
-    //             offsetX = (frame.width - newWidth) / 2;
-    //             offsetY = (frame.height - newHeight) / 2;
-
-    //             onChange({
-    //               x: frame.x + offsetX,
-    //               y: frame.y + offsetY,
-    //               width: newWidth,
-    //               height: newHeight,
-    //               frameId: frame.id,
-    //               fitMode: currentFitMode,
-    //               width_percent: toPercent(newWidth, stageWidth),
-    //               height_percent: toPercent(newHeight, stageHeight),
-    //               x_percent: toPercent(frame.x + offsetX, stageWidth),
-    //               y_percent: toPercent(frame.y + offsetY, stageHeight),
-    //             });
-    //           } else {
-    //             onChange({ x: img.x(), y: img.y(), frameId: null });
-    //           }
-
-    //           wasOverFrameRef.current = false;
-    //         }}
-    //         onTransform={(e) => {
-    //           const node = e.target;
-    //           const newWidth = node.width() * node.scaleX();
-    //           const newHeight = node.height() * node.scaleY();
-    //           const newX = node.x();
-    //           const newY = node.y();
-
-    //           onChange({
-    //             x: newX,
-    //             y: newY,
-    //             width: newWidth,
-    //             height: newHeight,
-    //             rotation: node.rotation(),
-    //             width_percent: toPercent(newWidth, stageWidth),
-    //             height_percent: toPercent(newHeight, stageHeight),
-    //             x_percent: toPercent(newX, stageWidth),
-    //             y_percent: toPercent(newY, stageHeight),
-    //           });
-
-    //           node.scaleX(1);
-    //           node.scaleY(1);
-    //         }}
-    //       />
-          
-    //     </>
-    //   );
-    // }
 
       case "frame": {
         const imageInFrame = (elements as CanvasElement[]).find((el) => el.type === "image" && el.frameId === element.id);
@@ -1663,18 +1118,470 @@ export const ElementRenderer = forwardRef<any, Props>(
         );
       }
 
+      // دا كود فيه تحريك الصورة مع الفريم
+      // case "image": {
+      //   const [image] = useImage(element.src || "");
+      //   const frame = elements.find((f:CanvasElement) => f.id === element.frameId);
+      //   const wasOverFrameRef = useRef(false);
+      //   const [currentFitMode] = useState(element.fitMode || "fit");
+
+      //   const applyFitMode = (newFitMode:string, targetFrame:CanvasFrameElement, imgElement:CanvasElement, nativeImage:HTMLImageElement) => {
+      //     const frameAspect = targetFrame.width / targetFrame.height;
+      //     // Use native image dimensions if available, else fall back to element dimensions
+      //     const imgAspect = nativeImage
+      //       ? nativeImage.width / nativeImage.height
+      //       : imgElement.width / imgElement.height || 1; 
+
+      //     let newWidth, newHeight, offsetX, offsetY;
+
+      //     switch (newFitMode) {
+      //       case "fit":
+      //         if (imgAspect > frameAspect) {
+      //           newWidth = targetFrame.width;
+      //           newHeight = targetFrame.width / imgAspect;
+      //           offsetX = 0;
+      //           offsetY = (targetFrame.height - newHeight) / 2;
+      //         } else {
+      //           newHeight = targetFrame.height;
+      //           newWidth = targetFrame.height * imgAspect;
+      //           offsetX = (targetFrame.width - newWidth) / 2;
+      //           offsetY = 0;
+      //         }
+      //         break;
+
+      //       case "fill":
+      //         // احسب نسبة العرض إلى الطول للفريم والصورة
+      //         if (imgAspect > frameAspect) {
+      //           // الصورة أعرض، نملّي الارتفاع ونقطّع العرض
+      //           newHeight = targetFrame.height;
+      //           newWidth = targetFrame.height * imgAspect;
+      //           // لو العرض أكبر من الفريم، نضمن إن الصورة تتمركز
+      //           offsetX = (targetFrame.width - newWidth) / 2;
+      //           offsetY = 0;
+      //         } else {
+      //           // الصورة أطول، نملّي العرض ونقطّع الارتفاع
+      //           newWidth = targetFrame.width;
+      //           newHeight = targetFrame.width / imgAspect;
+      //           offsetX = 0;
+      //           offsetY = (targetFrame.height - newHeight) / 2;
+      //         }
+      //         // التأكد إن الصورة مش هتخرج برا الفريم
+      //         newWidth = Math.min(newWidth, targetFrame.width);
+      //         newHeight = Math.min(newHeight, targetFrame.height);
+      //         break;
+
+
+      //       case "stretch":
+      //         newWidth = targetFrame.width;
+      //         newHeight = targetFrame.height;
+      //         offsetX = 0;
+      //         offsetY = 0;
+      //         break;
+
+      //       default:
+      //         newWidth = targetFrame.width;
+      //         newHeight = targetFrame.height;
+      //         offsetX = 0;
+      //         offsetY = 0;
+      //         break;
+      //     }
+
+      //     return {
+      //       x: targetFrame.x + offsetX,
+      //       y: targetFrame.y + offsetY,
+      //       width: newWidth,
+      //       height: newHeight,
+      //       fitMode: newFitMode,
+      //       width_percent: toPercent(newWidth, stageWidth),
+      //       height_percent: toPercent(newHeight, stageHeight),
+      //       x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
+      //       y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
+      //     };
+      //   };
+
+      //   if (frame) {
+      //     // Ensure image fits frame on initial render or when fit mode/frame changes
+      //     useEffect(() => {
+      //       if (image) {
+      //         const imageUpdates = applyFitMode(currentFitMode, frame, element, image);
+      //         dispatch(
+      //           updateElement({
+      //             id: element.id,
+      //             updates: {
+      //               ...imageUpdates,
+      //               rotation: frame.rotation, 
+      //             },
+      //           })
+      //         );
+      //       }
+      //     }, [currentFitMode, frame.width, frame.height, frame.x, frame.y, frame.rotation, image]);
+
+      //     return (
+      //       <>
+      //         <Group
+      //           x={frame.x}
+      //           y={frame.y}
+      //           rotation={frame.rotation}
+      //           draggable
+      //           onClick={onSelect}
+      //           onDragMove={(e) => {
+      //             const node = e.target;
+      //             const newX = node.x();
+      //             const newY = node.y();
+
+      //             // Update frame position
+      //             dispatch(
+      //               updateElement({
+      //                 id: frame.id,
+      //                 updates: {
+      //                   x: newX,
+      //                   y: newY,
+      //                   width_percent: toPercent(frame.width, stageWidth),
+      //                   height_percent: toPercent(frame.height, stageHeight),
+      //                   x_percent: toPercent(newX, stageWidth),
+      //                   y_percent: toPercent(newY, stageHeight),
+      //                 },
+      //               })
+      //             );
+
+      //             // Update image position based on fit mode
+      //             if (image) {
+      //               const imageUpdates = applyFitMode(currentFitMode, { ...frame, x: newX, y: newY }, element, image);
+      //               dispatch(
+      //                 updateElement({
+      //                   id: element.id,
+      //                   updates: {
+      //                     ...imageUpdates,
+      //                     rotation: frame.rotation, // Maintain rotation alignment
+      //                   },
+      //                 })
+      //               );
+      //             }
+
+      //           }}
+      //           onTransform={(e) => {
+      //             const node = e.target;
+      //             const newWidth = node.width() * node.scaleX();
+      //             const newHeight = node.height() * node.scaleY();
+      //             const newX = node.x();
+      //             const newY = node.y();
+
+      //             // Update frame
+      //             dispatch(
+      //               updateElement({
+      //                 id: frame.id,
+      //                 updates: {
+      //                   x: newX,
+      //                   y: newY,
+      //                   width: newWidth,
+      //                   height: newHeight,
+      //                   rotation: node.rotation(),
+      //                   width_percent: toPercent(newWidth, stageWidth),
+      //                   height_percent: toPercent(newHeight, stageHeight),
+      //                   x_percent: toPercent(newX, stageWidth),
+      //                   y_percent: toPercent(newY, stageHeight),
+      //                 },
+      //               })
+      //             );
+
+      //             const updatedFrame: CanvasFrameElement = {
+      //               ...frame,
+      //               x: newX,
+      //               y: newY,
+      //               width: newWidth,
+      //               height: newHeight,
+      //             };
+
+      //             // Update image based on fit mode
+      //             if(image){
+      //                 const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
+      //                 dispatch(
+      //                   updateElement({
+      //                     id: element.id,
+      //                     updates: {
+      //                       ...imageUpdates,
+      //                       rotation: node.rotation(), // Align rotation with frame
+      //                     },
+      //                   })
+      //                 );
+      //             }
+
+      //             node.scaleX(1);
+      //             node.scaleY(1);
+      //           }}>
+      //           <Rect
+      //             x={0}
+      //             y={0}
+      //             width={frame.width}
+      //             height={frame.height}
+      //             fill={frame.fill}
+      //             dash={[4, 4]}
+      //             stroke={frame.stroke}
+      //             strokeWidth={frame.strokeWidth}
+      //           />
+      //           <KonvaImage
+      //             ref={ref}
+      //             image={image}
+      //             x={element.x - frame.x}
+      //             y={element.y - frame.y}
+      //             width={element.width}
+      //             height={element.height}
+      //             clipFunc={(ctx: CanvasRenderingContext2D) => {
+      //               ctx.rect(0, 0, frame.width, frame.height);
+      //             }}
+      //             onTransform={(e) => {
+      //               const node = e.target;
+      //               const newWidth = node.width() * node.scaleX();
+      //               const newHeight = node.height() * node.scaleY();
+      //               const newX = node.x() + frame.x; // Adjust for group offset
+      //               const newY = node.y() + frame.y;
+
+      //               // Update frame to match image size
+      //               dispatch(
+      //                 updateElement({
+      //                   id: frame.id,
+      //                   updates: {
+      //                     x: newX,
+      //                     y: newY,
+      //                     width: newWidth,
+      //                     height: newHeight,
+      //                     rotation: node.rotation(),
+      //                     width_percent: toPercent(newWidth, stageWidth),
+      //                     height_percent: toPercent(newHeight, stageHeight),
+      //                     x_percent: toPercent(newX, stageWidth),
+      //                     y_percent: toPercent(newY, stageHeight),
+      //                   },
+      //                 })
+      //               );
+
+      //               const updatedFrame: CanvasFrameElement = {
+      //                 ...frame,
+      //                 x: newX,
+      //                 y: newY,
+      //                 width: newWidth,
+      //                 height: newHeight,
+      //               };
+
+      //               // Update image with fit mode
+      //               if(image){
+      //                 const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
+      //                 dispatch(
+      //                   updateElement({
+      //                     id: element.id,
+      //                     updates: {
+      //                       ...imageUpdates,
+      //                       rotation: node.rotation(), 
+      //                     },
+      //                   })
+      //                 );
+      //               }
+
+      //               node.scaleX(1);
+      //               node.scaleY(1);
+      //             }}
+      //           />
+      //         </Group>
+      //       </>
+      //     );
+      //   }
+
+      //   // Image without a frame
+      //   return (
+      //     <KonvaImage
+      //       ref={ref}
+      //       image={image}
+      //       x={element.x}
+      //       y={element.y}
+      //       width={element.width}
+      //       height={element.height}
+      //       rotation={element.rotation}
+      //       draggable
+      //       onClick={onSelect}
+      //       onDragMove={(e) => {
+      //         const node = e.target;
+      //         const newX = node.x();
+      //         const newY = node.y();
+
+      //         // Update image position
+      //         dispatch(
+      //           updateElement({
+      //             id: element.id,
+      //             updates: {
+      //               x: newX,
+      //               y: newY,
+      //               width_percent: toPercent(element.width, stageWidth),
+      //               height_percent: toPercent(element.height, stageHeight),
+      //               x_percent: toPercent(newX, stageWidth),
+      //               y_percent: toPercent(newY, stageHeight),
+      //             },
+      //           })
+      //         );
+
+      //         // Check for frame association
+      //         const frames = (elements as CanvasElement[]).filter(
+      //           (el) =>
+      //             el.type === "frame" &&
+      //             newX + element.width / 2 >= el.x &&
+      //             newX + element.width / 2 <= el.x + el.width &&
+      //             newY + element.height / 2 >= el.y &&
+      //             newY + element.height / 2 <= el.y + el.height
+      //         )
+      //         .sort((a, b) => elements.indexOf(b) - elements.indexOf(a));
+
+      //         const targetFrame = frames[0];
+
+      //         if (!targetFrame) {
+      //           wasOverFrameRef.current = false;
+      //           return;
+      //         }
+
+      //         const isAlreadyHasImage = elements.some(
+      //           (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
+      //         );
+
+      //         if (isAlreadyHasImage) {
+      //           return;
+      //         }
+
+      //         if (!wasOverFrameRef.current && image) {
+      //           const imageUpdates = applyFitMode(currentFitMode, targetFrame as CanvasFrameElement, element, image);
+      //           dispatch(
+      //             updateElement({
+      //               id: element.id,
+      //               updates: {
+      //                 ...imageUpdates,
+      //                 frameId: targetFrame.id,
+      //                 rotation: targetFrame.rotation, // Align rotation with frame
+      //               },
+      //             })
+      //           );
+      //           wasOverFrameRef.current = true;
+      //         }
+      //       }}
+      //       onDragEnd={(e) => {
+      //         const node = e.target;
+      //         const newX = node.x();
+      //         const newY = node.y();
+
+      //         // Check for frame association
+      //         const frames = elements
+      //           .filter(
+      //             (el:CanvasElement) =>
+      //               el.type === "frame" &&
+      //               newX + element.width / 2 >= el.x &&
+      //               newX + element.width / 2 <= el.x + el.width &&
+      //               newY + element.height / 2 >= el.y &&
+      //               newY + element.height / 2 <= el.y + el.height
+      //           )
+      //           .sort((a:CanvasElement, b:CanvasElement) => elements.indexOf(b) - elements.indexOf(a));
+
+      //         const targetFrame = frames[0];
+
+      //         if (targetFrame) {
+      //           const isAlreadyHasImage = elements.some(
+      //             (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
+      //           );
+
+      //           if (isAlreadyHasImage) {
+      //             dispatch(
+      //               updateElement({
+      //                 id: element.id,
+      //                 updates: {
+      //                   x: newX,
+      //                   y: newY,
+      //                   frameId: null,
+      //                   width_percent: toPercent(element.width, stageWidth),
+      //                   height_percent: toPercent(element.height, stageHeight),
+      //                   x_percent: toPercent(newX, stageWidth),
+      //                   y_percent: toPercent(newY, stageHeight),
+      //                 },
+      //               })
+      //             );
+      //             wasOverFrameRef.current = false;
+      //             return;
+      //           }
+
+      //           if (image) {
+      //             const imageUpdates = applyFitMode(currentFitMode, targetFrame, element, image);
+      //             dispatch(
+      //               updateElement({
+      //                 id: element.id,
+      //                 updates: {
+      //                   ...imageUpdates,
+      //                   frameId: targetFrame.id,
+      //                   rotation: targetFrame.rotation,
+      //                 },
+      //               })
+      //             );
+      //           } else {
+      //             dispatch(
+      //               updateElement({
+      //                 id: element.id,
+      //                 updates: {
+      //                   x: newX,
+      //                   y: newY,
+      //                   frameId: null,
+      //                   width_percent: toPercent(element.width, stageWidth),
+      //                   height_percent: toPercent(element.height, stageHeight),
+      //                   x_percent: toPercent(newX, stageWidth),
+      //                   y_percent: toPercent(newY, stageHeight),
+      //                 },
+      //               })
+      //             );
+      //           }
+
+      //           wasOverFrameRef.current = false;
+      //         }
+      //       }}
+      //       onTransform={(e) => {
+      //         const node = e.target;
+      //         const newWidth = node.width() * node.scaleX();
+      //         const newHeight = node.height() * node.scaleY();
+      //         const newX = node.x();
+      //         const newY = node.y();
+
+      //         dispatch(
+      //           updateElement({
+      //             id: element.id,
+      //             updates: {
+      //               x: newX,
+      //               y: newY,
+      //               width: newWidth,
+      //               height: newHeight,
+      //               rotation: node.rotation(),
+      //               width_percent: toPercent(newWidth, stageWidth),
+      //               height_percent: toPercent(newHeight, stageHeight),
+      //               x_percent: toPercent(newX, stageWidth),
+      //               y_percent: toPercent(newY, stageHeight),
+      //             },
+      //           })
+      //         );
+
+      //         node.scaleX(1);
+      //         node.scaleY(1);
+      //       }}
+      //     />
+      //   );
+      // }
+
       case "image": {
         const [image] = useImage(element.src || "");
-        const frame = elements.find((f:CanvasElement) => f.id === element.frameId);
+        const frame = elements.find(
+          (f: CanvasElement) => f.id === element.frameId
+        );
         const wasOverFrameRef = useRef(false);
-        const [currentFitMode] = useState(element.fitMode || "fit");
+        const [currentFitMode, setCurrentFitMode] = useState(
+          element.fitMode || "fill"
+        );
+        const isDraggingImageRef = useRef(false);
+        const [isMovable, setIsMovable] = useState(false); // New state to track if image is movable
 
-        const applyFitMode = (newFitMode:string, targetFrame:CanvasFrameElement, imgElement:CanvasElement, nativeImage:HTMLImageElement) => {
+        const applyFitMode = (
+          newFitMode: string,
+          targetFrame: CanvasElement
+        ) => {
           const frameAspect = targetFrame.width / targetFrame.height;
-          // Use native image dimensions if available, else fall back to element dimensions
-          const imgAspect = nativeImage
-            ? nativeImage.width / nativeImage.height
-            : imgElement.width / imgElement.height || 1; 
+          const imgAspect = element.width / element.height;
 
           let newWidth, newHeight, offsetX, offsetY;
 
@@ -1683,83 +1590,65 @@ export const ElementRenderer = forwardRef<any, Props>(
               if (imgAspect > frameAspect) {
                 newWidth = targetFrame.width;
                 newHeight = targetFrame.width / imgAspect;
-                offsetX = 0;
-                offsetY = (targetFrame.height - newHeight) / 2;
               } else {
                 newHeight = targetFrame.height;
                 newWidth = targetFrame.height * imgAspect;
-                offsetX = (targetFrame.width - newWidth) / 2;
-                offsetY = 0;
               }
               break;
 
             case "fill":
-              if (imgAspect > frameAspect) {
-                newHeight = targetFrame.height;
-                newWidth = targetFrame.height * imgAspect;
-                offsetX = (targetFrame.width - newWidth) / 2;
-                offsetY = 0;
-              } else {
+              if (imgAspect < frameAspect) {
                 newWidth = targetFrame.width;
                 newHeight = targetFrame.width / imgAspect;
-                offsetX = 0;
-                offsetY = (targetFrame.height - newHeight) / 2;
+              } else {
+                newHeight = targetFrame.height;
+                newWidth = targetFrame.height * imgAspect;
               }
               break;
 
             case "stretch":
               newWidth = targetFrame.width;
               newHeight = targetFrame.height;
-              offsetX = 0;
-              offsetY = 0;
               break;
 
             default:
-              newWidth = targetFrame.width;
-              newHeight = targetFrame.height;
-              offsetX = 0;
-              offsetY = 0;
+              if (imgAspect < frameAspect) {
+                newWidth = targetFrame.width;
+                newHeight = targetFrame.width / imgAspect;
+              } else {
+                newHeight = targetFrame.height;
+                newWidth = targetFrame.height * imgAspect;
+              }
               break;
           }
 
-          return {
+          offsetX = (targetFrame.width - newWidth) / 2;
+          offsetY = (targetFrame.height - newHeight) / 2;
+
+          onChange({
             x: targetFrame.x + offsetX,
             y: targetFrame.y + offsetY,
             width: newWidth,
             height: newHeight,
+            frameId: targetFrame.id,
             fitMode: newFitMode,
             width_percent: toPercent(newWidth, stageWidth),
             height_percent: toPercent(newHeight, stageHeight),
             x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
             y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
-          };
+          });
         };
 
         if (frame) {
-          // Ensure image fits frame on initial render or when fit mode/frame changes
-          useEffect(() => {
-            if (image) {
-              const imageUpdates = applyFitMode(currentFitMode, frame, element, image);
-              dispatch(
-                updateElement({
-                  id: element.id,
-                  updates: {
-                    ...imageUpdates,
-                    rotation: frame.rotation, 
-                  },
-                })
-              );
-            }
-          }, [currentFitMode, frame.width, frame.height, frame.x, frame.y, frame.rotation, image]);
-
           return (
             <>
               <Group
                 x={frame.x}
                 y={frame.y}
-                rotation={frame.rotation}
+                clipFunc={(ctx) => {
+                  ctx.rect(0, 0, frame.width, frame.height);
+                }}
                 draggable
-                onClick={onSelect}
                 onDragMove={(e) => {
                   const node = e.target;
                   const newX = node.x();
@@ -1780,327 +1669,473 @@ export const ElementRenderer = forwardRef<any, Props>(
                     })
                   );
 
-                  // Update image position based on fit mode
-                  if (image) {
-                    const imageUpdates = applyFitMode(currentFitMode, { ...frame, x: newX, y: newY }, element, image);
-                    dispatch(
-                      updateElement({
-                        id: element.id,
-                        updates: {
-                          ...imageUpdates,
-                          rotation: frame.rotation, // Maintain rotation alignment
-                        },
-                      })
-                    );
-                  }
-
+                  // Update image position to stay aligned with frame
+                  const offsetX = (frame.width - element.width) / 2;
+                  const offsetY = (frame.height - element.height) / 2;
+                  onChange({
+                    x: newX + offsetX,
+                    y: newY + offsetY,
+                    width: element.width,
+                    height: element.height,
+                    frameId: frame.id,
+                    fitMode: currentFitMode,
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(newX + offsetX, stageWidth),
+                    y_percent: toPercent(newY + offsetY, stageHeight),
+                  });
                 }}
-                onTransform={(e) => {
-                  const node = e.target;
-                  const newWidth = node.width() * node.scaleX();
-                  const newHeight = node.height() * node.scaleY();
-                  const newX = node.x();
-                  const newY = node.y();
-
-                  // Update frame
-                  dispatch(
-                    updateElement({
-                      id: frame.id,
-                      updates: {
-                        x: newX,
-                        y: newY,
-                        width: newWidth,
-                        height: newHeight,
-                        rotation: node.rotation(),
-                        width_percent: toPercent(newWidth, stageWidth),
-                        height_percent: toPercent(newHeight, stageHeight),
-                        x_percent: toPercent(newX, stageWidth),
-                        y_percent: toPercent(newY, stageHeight),
-                      },
-                    })
-                  );
-
-                  const updatedFrame: CanvasFrameElement = {
-                    ...frame,
-                    x: newX,
-                    y: newY,
-                    width: newWidth,
-                    height: newHeight,
-                  };
-
-                  // Update image based on fit mode
-                  if(image){
-                      const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
-                      dispatch(
-                        updateElement({
-                          id: element.id,
-                          updates: {
-                            ...imageUpdates,
-                            rotation: node.rotation(), // Align rotation with frame
-                          },
-                        })
-                      );
+                onClick={() => {
+                  if (onSelect) {
+                    onSelect();
                   }
-
-                  node.scaleX(1);
-                  node.scaleY(1);
                 }}
               >
-                <Rect
-                  x={0}
-                  y={0}
-                  width={frame.width}
-                  height={frame.height}
-                  fill={frame.fill}
-                  dash={[4, 4]}
-                  stroke={frame.stroke}
-                  strokeWidth={frame.strokeWidth}
-                />
                 <KonvaImage
                   ref={ref}
                   image={image}
-                  x={element.x - frame.x}
-                  y={element.y - frame.y}
+                  x={element.x - frame.x} // Relative to frame
+                  y={element.y - frame.y} // Relative to frame
                   width={element.width}
                   height={element.height}
-                  clipFunc={(ctx:CanvasRenderingContext2D) => {
-                    ctx.rect(0, 0, frame.width, frame.height);
+                  draggable={isMovable} // Draggable only when isMovable is true
+                  onClick={() => {
+                    if (onSelect) {
+                      onSelect();
+                    }
                   }}
-                  onTransform={(e) => {
-                    const node = e.target;
-                    const newWidth = node.width() * node.scaleX();
-                    const newHeight = node.height() * node.scaleY();
-                    const newX = node.x() + frame.x; // Adjust for group offset
-                    const newY = node.y() + frame.y;
+                  onDblClick={() => {
+                    setIsMovable((prev) => !prev); // Toggle movable state on double-click
+                  }}
+                  onDragStart={() => {
+                    isDraggingImageRef.current = true;
+                  }}
+                  onDragMove={(e) => {
+                    if (!isDraggingImageRef.current || !isMovable) return;
 
-                    // Update frame to match image size
+                    const imageNode = e.target;
+                    let newX = imageNode.x(); // Relative to frame
+                    let newY = imageNode.y(); // Relative to frame
+
+                    // Constrain image position within frame boundaries
+                    const minX = -(element.width - frame.width) / 2;
+                    const maxX = (element.width - frame.width) / 2;
+                    const minY = -(element.height - frame.height) / 2;
+                    const maxY = (element.height - frame.height) / 2;
+
+                    newX = Math.max(minX, Math.min(maxX, newX));
+                    newY = Math.max(minY, Math.min(maxY, newY));
+
+                    // Calculate new frame position to move with image
+                    const newFrameX = frame.x + newX - (element.x - frame.x);
+                    const newFrameY = frame.y + newY - (element.y - frame.y);
+
+                    // Update frame position
                     dispatch(
                       updateElement({
                         id: frame.id,
                         updates: {
-                          x: newX,
-                          y: newY,
-                          width: newWidth,
-                          height: newHeight,
-                          rotation: node.rotation(),
-                          width_percent: toPercent(newWidth, stageWidth),
-                          height_percent: toPercent(newHeight, stageHeight),
-                          x_percent: toPercent(newX, stageWidth),
-                          y_percent: toPercent(newY, stageHeight),
+                          x: newFrameX,
+                          y: newFrameY,
+                          width_percent: toPercent(frame.width, stageWidth),
+                          height_percent: toPercent(frame.height, stageHeight),
+                          x_percent: toPercent(newFrameX, stageWidth),
+                          y_percent: toPercent(newFrameY, stageHeight),
                         },
                       })
                     );
 
-                    const updatedFrame: CanvasFrameElement = {
-                      ...frame,
-                      x: newX,
-                      y: newY,
+                    // Update image position
+                    onChange({
+                      x: newFrameX + newX,
+                      y: newFrameY + newY,
+                      width: element.width,
+                      height: element.height,
+                      width_percent: toPercent(element.width, stageWidth),
+                      height_percent: toPercent(element.height, stageHeight),
+                      x_percent: toPercent(newFrameX + newX, stageWidth),
+                      y_percent: toPercent(newFrameY + newY, stageHeight),
+                    });
+                  }}
+                  onDragEnd={() => {
+                    isDraggingImageRef.current = false;
+                  }}
+                  onTransform={(e) => {
+                    const node = e.target;
+                    const oldWidth = element.width;
+                    const oldHeight = element.height;
+                    const newWidth = node.width() * node.scaleX();
+                    const newHeight = node.height() * node.scaleY();
+                    const newX = node.x(); // Relative to frame
+                    const newY = node.y(); // Relative to frame
+
+                    // Calculate new absolute image position
+                    const newImageX = newX + frame.x;
+                    const newImageY = newY + frame.y;
+
+                    // Update image
+                    onChange({
+                      x: newImageX,
+                      y: newImageY,
                       width: newWidth,
                       height: newHeight,
-                    };
+                      rotation: node.rotation(),
+                      width_percent: toPercent(newWidth, stageWidth),
+                      height_percent: toPercent(newHeight, stageHeight),
+                      x_percent: toPercent(newImageX, stageWidth),
+                      y_percent: toPercent(newImageY, stageHeight),
+                    });
 
-                    // Update image with fit mode
-                    if(image){
-                      const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
-                      dispatch(
-                        updateElement({
-                          id: element.id,
-                          updates: {
-                            ...imageUpdates,
-                            rotation: node.rotation(), 
-                          },
-                        })
-                      );
-                    }
-
+                    // Reset scale to avoid compounding
                     node.scaleX(1);
                     node.scaleY(1);
+
+                    // Update frame size to match image resize
+                    const scaleX = newWidth / oldWidth;
+                    const scaleY = newHeight / oldHeight;
+                    const newFrameWidth = frame.width * scaleX;
+                    const newFrameHeight = frame.height * scaleY;
+
+                    // Center the frame around the image
+                    const imageCenterX = newImageX + newWidth / 2;
+                    const imageCenterY = newImageY + newHeight / 2;
+                    const newFrameX = imageCenterX - newFrameWidth / 2;
+                    const newFrameY = imageCenterY - newFrameHeight / 2;
+
+                    dispatch(
+                      updateElement({
+                        id: frame.id,
+                        updates: {
+                          x: newFrameX,
+                          y: newFrameY,
+                          width: newFrameWidth,
+                          height: newFrameHeight,
+                          rotation: node.rotation(),
+                          width_percent: toPercent(newFrameWidth, stageWidth),
+                          height_percent: toPercent(newFrameHeight, stageHeight),
+                          x_percent: toPercent(newFrameX, stageWidth),
+                          y_percent: toPercent(newFrameY, stageHeight),
+                        },
+                      })
+                    );
                   }}
                 />
               </Group>
+
+              {element.isSelected && (
+                <div
+                  style={{
+                    position: "absolute",
+                    top: 10,
+                    left: 10,
+                    zIndex: 1000,
+                  }}
+                >
+                  <select
+                    value={currentFitMode}
+                    onChange={(e) => {
+                      setCurrentFitMode(e.target.value);
+                      if (frame) {
+                        applyFitMode(e.target.value, frame);
+                      }
+                    }}
+                  >
+                    <option value="fit">Fit</option>
+                    <option value="fill">Fill</option>
+                    <option value="stretch">Stretch</option>
+                  </select>
+                </div>
+              )}
             </>
           );
         }
 
-        // Image without a frame
+        // Image without a frame (unchanged)
         return (
-          <KonvaImage
-            ref={ref}
-            image={image}
-            x={element.x}
-            y={element.y}
-            width={element.width}
-            height={element.height}
-            rotation={element.rotation}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) => {
-              const node = e.target;
-              const newX = node.x();
-              const newY = node.y();
+          <>
+            <KonvaImage
+              ref={ref}
+              image={image}
+              x={element.x}
+              y={element.y}
+              width={element.width}
+              height={element.height}
+              draggable
+              onClick={() => {
+                if (onSelect) {
+                  onSelect();
+                }
+              }}
+              onDragMove={(e) => {
+                const imageNode = e.target;
+                const imgX = imageNode.x();
+                const imgY = imageNode.y();
+                const imgW = imageNode.width();
+                const imgH = imageNode.height();
 
-              // Update image position
-              dispatch(
-                updateElement({
-                  id: element.id,
-                  updates: {
-                    x: newX,
-                    y: newY,
-                    width_percent: toPercent(element.width, stageWidth),
-                    height_percent: toPercent(element.height, stageHeight),
-                    x_percent: toPercent(newX, stageWidth),
-                    y_percent: toPercent(newY, stageHeight),
-                  },
-                })
-              );
+                const centerX = imgX + imgW / 2;
+                const centerY = imgY + imgH / 2;
 
-              // Check for frame association
-              const frames = (elements as CanvasElement[]).filter(
-                (el) =>
-                  el.type === "frame" &&
-                  newX + element.width / 2 >= el.x &&
-                  newX + element.width / 2 <= el.x + el.width &&
-                  newY + element.height / 2 >= el.y &&
-                  newY + element.height / 2 <= el.y + el.height
-              )
-              .sort((a, b) => elements.indexOf(b) - elements.indexOf(a));
-
-              const targetFrame = frames[0];
-
-              if (!targetFrame) {
-                wasOverFrameRef.current = false;
-                return;
-              }
-
-              const isAlreadyHasImage = elements.some(
-                (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
-              );
-
-              if (isAlreadyHasImage) {
-                return;
-              }
-
-              if (!wasOverFrameRef.current && image) {
-                const imageUpdates = applyFitMode(currentFitMode, targetFrame as CanvasFrameElement, element, image);
                 dispatch(
                   updateElement({
                     id: element.id,
                     updates: {
-                      ...imageUpdates,
-                      frameId: targetFrame.id,
-                      rotation: targetFrame.rotation, // Align rotation with frame
+                      x: imgX,
+                      y: imgY,
+                      width_percent: toPercent(imgW, stageWidth),
+                      height_percent: toPercent(imgH, stageHeight),
+                      x_percent: toPercent(imgX, stageWidth),
+                      y_percent: toPercent(imgY, stageHeight),
                     },
                   })
                 );
-                wasOverFrameRef.current = true;
-              }
-            }}
-            onDragEnd={(e) => {
-              const node = e.target;
-              const newX = node.x();
-              const newY = node.y();
 
-              // Check for frame association
-              const frames = elements
-                .filter(
-                  (el:CanvasElement) =>
-                    el.type === "frame" &&
-                    newX + element.width / 2 >= el.x &&
-                    newX + element.width / 2 <= el.x + el.width &&
-                    newY + element.height / 2 >= el.y &&
-                    newY + element.height / 2 <= el.y + el.height
-                )
-                .sort((a:CanvasElement, b:CanvasElement) => elements.indexOf(b) - elements.indexOf(a));
-
-              const targetFrame = frames[0];
-
-              if (targetFrame) {
-                const isAlreadyHasImage = elements.some(
-                  (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
-                );
-
-                if (isAlreadyHasImage) {
-                  dispatch(
-                    updateElement({
-                      id: element.id,
-                      updates: {
-                        x: newX,
-                        y: newY,
-                        frameId: null,
-                        width_percent: toPercent(element.width, stageWidth),
-                        height_percent: toPercent(element.height, stageHeight),
-                        x_percent: toPercent(newX, stageWidth),
-                        y_percent: toPercent(newY, stageHeight),
-                      },
-                    })
+                const frames = elements
+                  .filter(
+                    (el: CanvasElement) =>
+                      el.type === "frame" &&
+                      centerX >= el.x &&
+                      centerX <= el.x + el.width &&
+                      centerY >= el.y &&
+                      centerY <= el.y + el.height
+                  )
+                  .sort(
+                    (a: CanvasElement, b: CanvasElement) =>
+                      elements.indexOf(b) - elements.indexOf(a)
                   );
+
+                const frame = frames[0];
+
+                if (!frame) {
                   wasOverFrameRef.current = false;
                   return;
                 }
 
-                if (image) {
-                  const imageUpdates = applyFitMode(currentFitMode, targetFrame, element, image);
-                  dispatch(
-                    updateElement({
-                      id: element.id,
-                      updates: {
-                        ...imageUpdates,
-                        frameId: targetFrame.id,
-                        rotation: targetFrame.rotation,
-                      },
-                    })
+                const isAlreadyHasImage = elements.some(
+                  (el: CanvasElement) =>
+                    el.type === "image" &&
+                    el.frameId === frame.id &&
+                    el.id !== element.id
+                );
+
+                if (isAlreadyHasImage) {
+                  return;
+                }
+
+                if (!wasOverFrameRef.current) {
+                  const frameAspect = frame.width / frame.height;
+                  const imgAspect = imgW / imgH;
+
+                  let newWidth, newHeight, offsetX, offsetY;
+
+                  switch (currentFitMode) {
+                    case "fit":
+                      if (imgAspect > frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+
+                    case "fill":
+                      if (imgAspect < frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+
+                    case "stretch":
+                      newWidth = frame.width;
+                      newHeight = frame.height;
+                      break;
+
+                    default:
+                      if (imgAspect < frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+                  }
+
+                  offsetX = (frame.width - newWidth) / 2;
+                  offsetY = (frame.height - newHeight) / 2;
+
+                  onChange({
+                    x: frame.x + offsetX,
+                    y: frame.y + offsetY,
+                    width: newWidth,
+                    height: newHeight,
+                    frameId: frame.id,
+                    fitMode: currentFitMode,
+                    width_percent: toPercent(newWidth, stageWidth),
+                    height_percent: toPercent(newHeight, stageHeight),
+                    x_percent: toPercent(frame.x + offsetX, stageWidth),
+                    y_percent: toPercent(frame.y + offsetY, stageHeight),
+                  });
+
+                  wasOverFrameRef.current = true;
+                }
+              }}
+              onDragEnd={(e) => {
+                const img = e.target;
+                const imgW = img.width();
+                const imgH = img.height();
+
+                const centerX = img.x() + imgW / 2;
+                const centerY = img.y() + imgH / 2;
+
+                const frames = elements
+                  .filter(
+                    (el: CanvasElement) =>
+                      el.type === "frame" &&
+                      centerX >= el.x &&
+                      centerX <= el.x + el.width &&
+                      centerY >= el.y &&
+                      centerY <= el.y + el.height
+                  )
+                  .sort(
+                    (a: CanvasElement, b: CanvasElement) =>
+                      elements.indexOf(b) - elements.indexOf(a)
                   );
+
+                const frame = frames[0];
+
+                if (frame) {
+                  const isAlreadyHasImage = elements.some(
+                    (el: CanvasElement) =>
+                      el.type === "image" &&
+                      el.frameId === frame.id &&
+                      el.id !== element.id
+                  );
+
+                  if (isAlreadyHasImage) {
+                    onChange({ x: img.x(), y: img.y(), frameId: null });
+                    wasOverFrameRef.current = false;
+                    return;
+                  }
+
+                  const frameAspect = frame.width / frame.height;
+                  const imgAspect = imgW / imgH;
+
+                  let newWidth, newHeight, offsetX, offsetY;
+
+                  switch (currentFitMode) {
+                    case "fit":
+                      if (imgAspect > frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+
+                    case "fill":
+                      if (imgAspect < frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+
+                    case "stretch":
+                      newWidth = frame.width;
+                      newHeight = frame.height;
+                      break;
+
+                    default:
+                      if (imgAspect < frameAspect) {
+                        newWidth = frame.width;
+                        newHeight = frame.width / imgAspect;
+                      } else {
+                        newHeight = frame.height;
+                        newWidth = frame.height * imgAspect;
+                      }
+                      break;
+                  }
+
+                  offsetX = (frame.width - newWidth) / 2;
+                  offsetY = (frame.height - newHeight) / 2;
+
+                  onChange({
+                    x: frame.x + offsetX,
+                    y: frame.y + offsetY,
+                    width: newWidth,
+                    height: newHeight,
+                    frameId: frame.id,
+                    fitMode: currentFitMode,
+                    width_percent: toPercent(newWidth, stageWidth),
+                    height_percent: toPercent(newHeight, stageHeight),
+                    x_percent: toPercent(frame.x + offsetX, stageWidth),
+                    y_percent: toPercent(frame.y + offsetY, stageHeight),
+                  });
                 } else {
-                  dispatch(
-                    updateElement({
-                      id: element.id,
-                      updates: {
-                        x: newX,
-                        y: newY,
-                        frameId: null,
-                        width_percent: toPercent(element.width, stageWidth),
-                        height_percent: toPercent(element.height, stageHeight),
-                        x_percent: toPercent(newX, stageWidth),
-                        y_percent: toPercent(newY, stageHeight),
-                      },
-                    })
-                  );
+                  onChange({ x: img.x(), y: img.y(), frameId: null });
                 }
 
                 wasOverFrameRef.current = false;
-              }
-            }}
-            onTransform={(e) => {
-              const node = e.target;
-              const newWidth = node.width() * node.scaleX();
-              const newHeight = node.height() * node.scaleY();
-              const newX = node.x();
-              const newY = node.y();
+              }}
+              onTransform={(e) => {
+                const node = e.target;
+                const newWidth = node.width() * node.scaleX();
+                const newHeight = node.height() * node.scaleY();
+                const newX = node.x();
+                const newY = node.y();
 
-              dispatch(
-                updateElement({
-                  id: element.id,
-                  updates: {
-                    x: newWidth,
-                    y: newY,
-                    width: newWidth,
-                    height: newHeight,
-                    rotation: node.rotation(),
-                    width_percent: toPercent(newWidth, stageWidth),
-                    height_percent: toPercent(newHeight, stageHeight),
-                    x_percent: toPercent(newX, stageWidth),
-                    y_percent: toPercent(newY, stageHeight),
-                  },
-                })
-              );
+                onChange({
+                  x: newX,
+                  y: newY,
+                  width: newWidth,
+                  height: newHeight,
+                  rotation: node.rotation(),
+                  width_percent: toPercent(newWidth, stageWidth),
+                  height_percent: toPercent(newHeight, stageHeight),
+                  x_percent: toPercent(newX, stageWidth),
+                  y_percent: toPercent(newY, stageHeight),
+                });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                node.scaleX(1);
+                node.scaleY(1);
+              }}
+            />
+            {element.isSelected && (
+              <div
+                style={{
+                  position: "absolute",
+                  top: 10,
+                  left: 10,
+                  zIndex: 1000,
+                }}
+              >
+                <select
+                  value={currentFitMode}
+                  onChange={(e) => {
+                    setCurrentFitMode(e.target.value);
+                    if (frame) {
+                      applyFitMode(e.target.value, frame);
+                    }
+                  }}
+                >
+                  <option value="fit">Fit</option>
+                  <option value="fill">Fill</option>
+                  <option value="stretch">Stretch</option>
+                </select>
+              </div>
+            )}
+          </>
         );
       }
-
+      
       case "icon": {
         const [iconImage] = useImage(`https://api.iconify.design/${element.iconName}.svg`);
 
