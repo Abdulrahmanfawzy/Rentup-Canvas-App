@@ -14,12 +14,11 @@ export type ElementType =
   | "wedge"
   | "ring"
   | "arrow"
-  | "icon"
-
+  | "icon";
 
 export type FitMode = "fill" | "fit" | "stretch";
 
-  // | { type: "icon"; iconName: string } // ✅ هنا أضفنا الأيقونة
+// | { type: "icon"; iconName: string } // ✅ هنا أضفنا الأيقونة
 
 export interface CanvasElement {
   backgroundBrandingType: string;
@@ -95,7 +94,7 @@ export interface CanvasTextElement extends CanvasElement {
   backgroundStroke?: string;
   backgroundStrokeWidth: number;
   fontBrandingType?: string;
-  label?: string[];
+  toi_labels?: string[];
   textDecoration?: "none" | "underline";
   align?: "left" | "center" | "right";
   fontWeight?: "normal" | "bold";

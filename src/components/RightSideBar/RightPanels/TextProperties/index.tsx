@@ -87,11 +87,8 @@ export default function TextProperties({
     const newLabels = values.filter(
       (tag) => tag && !currentTags.includes(tag) && tag.trim().length > 0
     );
-    console.log("New tags:", newLabels);
-
     // Post new tags to the API
     for (const newLabel of newLabels) {
-      console.log("Attempting to create label:", newLabel);
       try {
         await postTextLabel({ label: newLabel }).unwrap();
       } catch (err) {
@@ -100,7 +97,7 @@ export default function TextProperties({
     }
 
     // Update element.tags with the final values
-    update({ label: values });
+    update({ toi_labels: values });
   };
   const stageWidth = useAppSelector((s) => s.canvas.stageWidth);
   const stageHeight = useAppSelector((s) => s.canvas.stageHeight);
@@ -323,7 +320,7 @@ export default function TextProperties({
             isSearchable
             className="col-span-full"
             label="Label"
-            value={element.label ?? []}
+            value={element.toi_labels ?? []}
             options={labelOptions}
             valueKey="label"
             labelKey="label"

@@ -7,7 +7,7 @@ export const api = createApi({
     baseUrl: "https://djangoapi.markomlabs.com/",
     prepareHeaders: (headers) => {
       const csrfToken =
-        "h48eODX6yD9j6r1XOeRNbkAvLAWP0hj64Nj94XhDzjvixv4pT8x4lg2wbWGWU6ni";
+        "Lk2uGM6UeXEJCdCBhzUyMdxlOdYcoX3Cy3dpW6qrfD0I3hF3mtAPW9ZmezIjiM7O";
       if (csrfToken) {
         headers.set("X-CSRFTOKEN", csrfToken);
       }
