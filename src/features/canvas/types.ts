@@ -72,6 +72,8 @@ export interface CanvasElement {
   scaleY?: number;
   radius?: number;
   fontSize_percent?: number;
+
+  visible?: boolean;
 }
 
 export interface CanvasFrameElement extends CanvasElement {

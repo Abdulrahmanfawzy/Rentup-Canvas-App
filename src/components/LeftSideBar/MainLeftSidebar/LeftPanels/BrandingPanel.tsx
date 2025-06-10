@@ -21,12 +21,12 @@ export function BrandingPanel() {
 
   const [newKey, setNewKey] = useState("");
   const [newColor, setNewColor] = useState("#000000");
-
+  console.log("new");
   const handleAdd = () => {
     if (newKey.trim()) {
       dispatch(addColor({ key: newKey.trim(), value: newColor }));
       setNewKey("");
-      setNewColor("rgba(0,0,0,1)");
+      setNewColor("#000000");
     }
   };
 
@@ -56,62 +56,12 @@ export function BrandingPanel() {
     dispatch(removeColor(key));
   };
 
-  const applyBrandingToAll = () => {
-    elements.forEach((element) => {
-      const updates: any = {};
-
-      // Apply primary branding to fill colors
-      if (element.fill && !element.fillBrandingType) {
-        updates.fillBrandingType = "primary";
-      }
-
-      // Apply secondary branding to stroke colors
-      if (element.stroke && !element.strokeBrandingType) {
-        updates.strokeBrandingType = "secondary";
-      }
-
-      // Apply branding to text elements
-      if (element.type === "text") {
-        if (!element.colorBrandingType) {
-          updates.colorBrandingType = "primary";
-        }
-        if (!element.backgroundBrandingType) {
-          updates.backgroundBrandingType = "additional";
-        }
-        if (!element.fillBrandingType) {
-          updates.fontBrandingType = "default";
-        }
-      }
-
-      if (Object.keys(updates).length > 0) {
-        dispatch(updateElement({ id: element.id, updates }));
-      }
-    });
-  };
-
-  const resetAllBranding = () => {
-    elements.forEach((element) => {
-      const updates: any = {
-        fillBrandingType: "fixed",
-        strokeBrandingType: "fixed",
-      };
-
-      if (element.type === "text") {
-        updates.colorBrandingType = "fixed";
-        updates.backgroundBrandingType = "fixed";
-        updates.fontBrandingType = "fixed";
-      }
-
-      dispatch(updateElement({ id: element.id, updates }));
-    });
-  };
-
   return (
     <div className="p-4 space-y-4">
       <h2 className="text-lg font-bold">Branding Colors</h2>
 
       {/* Template Actions */}
-      <div className="space-y-2 p-3 bg-secondary rounded-md">
+      {/*       <div className="space-y-2 p-3 bg-secondary rounded-md">
         <h3 className="font-semibold text-sm">Template Actions</h3>
         <div className="flex flex-col gap-2">
           <Button
@@ -131,7 +81,7 @@ export function BrandingPanel() {
             Reset All to Fixed Colors
           </Button>
         </div>
-      </div>
+      </div> */}
 
       {/* Existing Colors */}
       <div className="space-y-2">
@@ -153,15 +103,18 @@ export function BrandingPanel() {
       {/* Add New */}
       <div className="pt-4 border-t">
         <h3 className="font-semibold mb-2">Add New Color</h3>
-        <div className="flex items-center gap-2 mb-3">
+        <div className="flex flex-col items-center gap-2 mb-3">
           <TextInput
+            className="w-full"
             value={newKey}
             placeholder="e.g. highlight"
             onChange={(val) => setNewKey(val)}
           />
           <ColorInput
+            showOpacity
+            className="w-full"
             value={newColor}
-            onChange={(e: any) => setNewColor(e.target.value)}
+            onChange={(val) => setNewColor(val)}
           />
         </div>
         <Button onClick={handleAdd}>Add New Color Branding</Button>

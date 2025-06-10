@@ -6,11 +6,11 @@ export const api = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: "https://djangoapi.markomlabs.com/",
     prepareHeaders: (headers) => {
-      const csrfToken =
+      /*       const csrfToken =
         "Lk2uGM6UeXEJCdCBhzUyMdxlOdYcoX3Cy3dpW6qrfD0I3hF3mtAPW9ZmezIjiM7O";
       if (csrfToken) {
         headers.set("X-CSRFTOKEN", csrfToken);
-      }
+      } */
       headers.set("Accept", "*/*");
       headers.set("Content-Type", "application/json");
       return headers;

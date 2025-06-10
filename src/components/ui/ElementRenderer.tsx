@@ -245,7 +245,7 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         return (
           <>
-            {textElement.background && (
+            {textElement.background && (element.visible ?? true) && (
               <Rect
                 x={textElement.x - (textElement.padding || 0)}
                 y={textElement.y - (textElement.padding || 0)}
@@ -259,146 +259,150 @@ export const ElementRenderer = forwardRef<any, Props>(
                 cornerRadius={textCornerRadius}
               />
             )}
-            <Text
-              ref={refText}
-              x={textElement.x}
-              y={textElement.y}
-              text={editableText}
-              fill={textElement.fill || "#000"}
-              stroke={textElement.stroke}
-              padding={textElement.padding}
-              fontSize={textElement.fontSize}
-              fontFamily={textElement.fontFamily || "Arial"}
-              opacity={textElement.opacity}
-              verticalAlign="middle"
-              align={textAlign}
-              fontStyle={fontWeight}
-              draggable
-              width={textElement.width || 100} // 🟢 Enforce fixed width for wrapping
-              wrap="word" // Ensure word wrapping
-              onClick={handleSelect}
-              onDblClick={handleDoubleClick}
-              onDragMove={(e) =>
-                dispatch(
-                  updateElement({
-                    id: textElement.id,
-                    updates: {
-                      x: e.target.x(),
-                      y: e.target.y(),
-                      width_percent: toPercent(element.width, stageWidth),
-                      height_percent: toPercent(element.height, stageHeight),
-                      x_percent: toPercent(e.target.x(), stageWidth),
-                      y_percent: toPercent(e.target.y(), stageHeight),
-                      fontSize_percent: toPercentFontSize(
-                        Number(element.fontSize),
-                        stageWidth,
-                        stageHeight
-                      ),
-                    },
-                  })
-                )
-              }
-              onTransform={(e) => {
-                const node = refText.current;
-                const newWidth = Math.max(
-                  30,
-                  e.target.width() * e.target.scaleX()
-                );
-
-                // fontSize_percent: toPercentFontSize(20, stageWidth, stageHeight)
-
-                if (node) {
-                  node.width(newWidth);
-                  node.scaleX(1);
-                  node.scaleY(1);
-                  node._setTextData();
-                  const box = node.getClientRect({ skipTransform: true });
-                  setBgSize({ width: newWidth, height: box.height });
-                }
-              }}
-              onTransformEnd={() => {
-                const node = refText.current;
-                if (!node) return;
-                const newWidth = Math.max(30, node.width());
-                node.width(newWidth);
-                node._setTextData();
-                const box = node.getClientRect({ skipTransform: true });
-                const newHeight = box.height;
-
-                setBgSize({ width: newWidth, height: newHeight });
-
-                dispatch(
-                  updateElement({
-                    id: textElement.id,
-                    updates: {
-                      x: node.x(),
-                      y: node.y(),
-                      width: newWidth,
-                      height: newHeight,
-                      align: textAlign,
-                      fontWeight,
-                      width_percent: toPercent(newWidth, stageWidth),
-                      height_percent: toPercent(newHeight, stageHeight),
-                      x_percent: toPercent(node.x(), stageWidth),
-                      y_percent: toPercent(node.y(), stageHeight),
-                      fontSize_percent: toPercentFontSize(
-                        Number(element.fontSize),
-                        stageWidth,
-                        stageHeight
-                      ),
-                    },
-                  })
-                );
-
-                node.scaleX(1);
-                node.scaleY(1);
-              }}
-            />
-            {isSelected && !isEditing && (
-              <Transformer
-                ref={trRef}
-                rotateEnabled={false}
-                // 'top-left', 'top-right',
-                enabledAnchors={["bottom-left", "bottom-right"]}
-                boundBoxFunc={(oldBox, newBox) => {
-                  if (newBox.width < 30) {
-                    return oldBox; // 🟢 Prevent width from going too small
+            {(element.visible ?? true) && (
+              <>
+                <Text
+                  ref={refText}
+                  x={textElement.x}
+                  y={textElement.y}
+                  text={editableText}
+                  fill={textElement.fill || "#000"}
+                  stroke={textElement.stroke}
+                  padding={textElement.padding}
+                  fontSize={textElement.fontSize}
+                  fontFamily={textElement.fontFamily || "Arial"}
+                  opacity={textElement.opacity}
+                  verticalAlign="middle"
+                  align={textAlign}
+                  fontStyle={fontWeight}
+                  draggable
+                  width={textElement.width || 100} // 🟢 Enforce fixed width for wrapping
+                  wrap="word" // Ensure word wrapping
+                  onClick={handleSelect}
+                  onDblClick={handleDoubleClick}
+                  onDragMove={(e) =>
+                    dispatch(
+                      updateElement({
+                        id: textElement.id,
+                        updates: {
+                          x: e.target.x(),
+                          y: e.target.y(),
+                          width_percent: toPercent(element.width, stageWidth),
+                          height_percent: toPercent(element.height, stageHeight),
+                          x_percent: toPercent(e.target.x(), stageWidth),
+                          y_percent: toPercent(e.target.y(), stageHeight),
+                          fontSize_percent: toPercentFontSize(
+                            Number(element.fontSize),
+                            stageWidth,
+                            stageHeight
+                          ),
+                        },
+                      })
+                    )
                   }
-                  return newBox;
-                }}
-                onClick={(e) => (e.cancelBubble = true)}
-              />
-            )}
-            {isEditing && (
-              <Html>
-                <textarea
-                  style={{
-                    position: "absolute",
-                    top: textElement.y,
-                    left: textElement.x,
-                    width: textElement.width || 100,
-                    height: bgSize.height,
-                    fontSize: textElement.fontSize,
-                    fontFamily: textElement.fontFamily || "Arial",
-                    padding: textElement.padding || 0,
-                    color: textElement.fill,
-                    background: "white",
-                    border: "1px dashed #ccc",
-                    resize: "none",
-                    outline: "none",
-                    overflow: "hidden",
-                    lineHeight: "1",
-                    textAlign: textAlign,
-                    fontWeight: fontWeight,
-                    fontStyle: fontStyle,
+                  onTransform={(e) => {
+                    const node = refText.current;
+                    const newWidth = Math.max(
+                      30,
+                      e.target.width() * e.target.scaleX()
+                    );
+    
+                    // fontSize_percent: toPercentFontSize(20, stageWidth, stageHeight)
+    
+                    if (node) {
+                      node.width(newWidth);
+                      node.scaleX(1);
+                      node.scaleY(1);
+                      node._setTextData();
+                      const box = node.getClientRect({ skipTransform: true });
+                      setBgSize({ width: newWidth, height: box.height });
+                    }
                   }}
-                  value={editableText}
-                  onChange={handleTextChange}
-                  onBlur={handleTextBlur}
-                  onKeyPress={handleKeyPress}
-                  autoFocus
+                  onTransformEnd={() => {
+                    const node = refText.current;
+                    if (!node) return;
+                    const newWidth = Math.max(30, node.width());
+                    node.width(newWidth);
+                    node._setTextData();
+                    const box = node.getClientRect({ skipTransform: true });
+                    const newHeight = box.height;
+    
+                    setBgSize({ width: newWidth, height: newHeight });
+    
+                    dispatch(
+                      updateElement({
+                        id: textElement.id,
+                        updates: {
+                          x: node.x(),
+                          y: node.y(),
+                          width: newWidth,
+                          height: newHeight,
+                          align: textAlign,
+                          fontWeight,
+                          width_percent: toPercent(newWidth, stageWidth),
+                          height_percent: toPercent(newHeight, stageHeight),
+                          x_percent: toPercent(node.x(), stageWidth),
+                          y_percent: toPercent(node.y(), stageHeight),
+                          fontSize_percent: toPercentFontSize(
+                            Number(element.fontSize),
+                            stageWidth,
+                            stageHeight
+                          ),
+                        },
+                      })
+                    );
+    
+                    node.scaleX(1);
+                    node.scaleY(1);
+                  }}
                 />
-              </Html>
+                {isSelected && !isEditing && (
+                  <Transformer
+                    ref={trRef}
+                    rotateEnabled={false}
+                    // 'top-left', 'top-right',
+                    enabledAnchors={["bottom-left", "bottom-right"]}
+                    boundBoxFunc={(oldBox, newBox) => {
+                      if (newBox.width < 30) {
+                        return oldBox; // 🟢 Prevent width from going too small
+                      }
+                      return newBox;
+                    }}
+                    onClick={(e) => (e.cancelBubble = true)}
+                  />
+                )}
+                {isEditing && (
+                  <Html>
+                    <textarea
+                      style={{
+                        position: "absolute",
+                        top: textElement.y,
+                        left: textElement.x,
+                        width: textElement.width || 100,
+                        height: bgSize.height,
+                        fontSize: textElement.fontSize,
+                        fontFamily: textElement.fontFamily || "Arial",
+                        padding: textElement.padding || 0,
+                        color: textElement.fill,
+                        background: "white",
+                        border: "1px dashed #ccc",
+                        resize: "none",
+                        outline: "none",
+                        overflow: "hidden",
+                        lineHeight: "1",
+                        textAlign: textAlign,
+                        fontWeight: fontWeight,
+                        fontStyle: fontStyle,
+                      }}
+                      value={editableText}
+                      onChange={handleTextChange}
+                      onBlur={handleTextBlur}
+                      onKeyPress={handleKeyPress}
+                      autoFocus
+                    />
+                  </Html>
+                )}
+              </>
             )}
           </>
         );
@@ -1055,514 +1059,72 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         // Render standalone frame
         return (
-          <Rect
-            ref={ref}
-            x={element.x}
-            y={element.y}
-            width={element.width}
-            height={element.height}
-            fill={element.fill}
-            dash={[4, 4]}
-            stroke={element.stroke}
-            strokeWidth={element.strokeWidth}
-            rotation={element.rotation}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) => {
-              const node = e.target;
-              const newX = node.x();
-              const newY = node.y();
-
-              dispatch(
-                updateElement({
-                  id: element.id,
-                  updates: {
-                    x: newX,
-                    y: newY,
-                    width_percent: toPercent(element.width, stageWidth),
-                    height_percent: toPercent(element.height, stageHeight),
-                    x_percent: toPercent(newX, stageWidth),
-                    y_percent: toPercent(newY, stageHeight),
-                  },
-                })
-              );
-            }}
-            onTransform={(e) => {
-              const node = e.target;
-              const newWidth = node.width() * node.scaleX();
-              const newHeight = node.height() * node.scaleY();
-              const newX = node.x();
-              const newY = node.y();
-
-              dispatch(
-                updateElement({
-                  id: element.id,
-                  updates: {
-                    x: newX,
-                    y: newY,
-                    width: newWidth,
-                    height: newHeight,
-                    rotation: node.rotation(),
-                    width_percent: toPercent(newWidth, stageWidth),
-                    height_percent: toPercent(newHeight, stageHeight),
-                    x_percent: toPercent(newX, stageWidth),
-                    y_percent: toPercent(newY, stageHeight),
-                  },
-                })
-              );
-
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+          <>
+            {(element.visible ?? true) && (
+              <Rect
+                ref={ref}
+                x={element.x}
+                y={element.y}
+                width={element.width}
+                height={element.height}
+                fill={element.fill}
+                dash={[4, 4]}
+                stroke={element.stroke}
+                strokeWidth={element.strokeWidth}
+                rotation={element.rotation}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) => {
+                  const node = e.target;
+                  const newX = node.x();
+                  const newY = node.y();
+  
+                  dispatch(
+                    updateElement({
+                      id: element.id,
+                      updates: {
+                        x: newX,
+                        y: newY,
+                        width_percent: toPercent(element.width, stageWidth),
+                        height_percent: toPercent(element.height, stageHeight),
+                        x_percent: toPercent(newX, stageWidth),
+                        y_percent: toPercent(newY, stageHeight),
+                      },
+                    })
+                  );
+                }}
+                onTransform={(e) => {
+                  const node = e.target;
+                  const newWidth = node.width() * node.scaleX();
+                  const newHeight = node.height() * node.scaleY();
+                  const newX = node.x();
+                  const newY = node.y();
+  
+                  dispatch(
+                    updateElement({
+                      id: element.id,
+                      updates: {
+                        x: newX,
+                        y: newY,
+                        width: newWidth,
+                        height: newHeight,
+                        rotation: node.rotation(),
+                        width_percent: toPercent(newWidth, stageWidth),
+                        height_percent: toPercent(newHeight, stageHeight),
+                        x_percent: toPercent(newX, stageWidth),
+                        y_percent: toPercent(newY, stageHeight),
+                      },
+                    })
+                  );
+  
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
       }
-
-      // دا كود فيه تحريك الصورة مع الفريم
-      // case "image": {
-      //   const [image] = useImage(element.src || "");
-      //   const frame = elements.find((f:CanvasElement) => f.id === element.frameId);
-      //   const wasOverFrameRef = useRef(false);
-      //   const [currentFitMode] = useState(element.fitMode || "fit");
-
-      //   const applyFitMode = (newFitMode:string, targetFrame:CanvasFrameElement, imgElement:CanvasElement, nativeImage:HTMLImageElement) => {
-      //     const frameAspect = targetFrame.width / targetFrame.height;
-      //     // Use native image dimensions if available, else fall back to element dimensions
-      //     const imgAspect = nativeImage
-      //       ? nativeImage.width / nativeImage.height
-      //       : imgElement.width / imgElement.height || 1; 
-
-      //     let newWidth, newHeight, offsetX, offsetY;
-
-      //     switch (newFitMode) {
-      //       case "fit":
-      //         if (imgAspect > frameAspect) {
-      //           newWidth = targetFrame.width;
-      //           newHeight = targetFrame.width / imgAspect;
-      //           offsetX = 0;
-      //           offsetY = (targetFrame.height - newHeight) / 2;
-      //         } else {
-      //           newHeight = targetFrame.height;
-      //           newWidth = targetFrame.height * imgAspect;
-      //           offsetX = (targetFrame.width - newWidth) / 2;
-      //           offsetY = 0;
-      //         }
-      //         break;
-
-      //       case "fill":
-      //         // احسب نسبة العرض إلى الطول للفريم والصورة
-      //         if (imgAspect > frameAspect) {
-      //           // الصورة أعرض، نملّي الارتفاع ونقطّع العرض
-      //           newHeight = targetFrame.height;
-      //           newWidth = targetFrame.height * imgAspect;
-      //           // لو العرض أكبر من الفريم، نضمن إن الصورة تتمركز
-      //           offsetX = (targetFrame.width - newWidth) / 2;
-      //           offsetY = 0;
-      //         } else {
-      //           // الصورة أطول، نملّي العرض ونقطّع الارتفاع
-      //           newWidth = targetFrame.width;
-      //           newHeight = targetFrame.width / imgAspect;
-      //           offsetX = 0;
-      //           offsetY = (targetFrame.height - newHeight) / 2;
-      //         }
-      //         // التأكد إن الصورة مش هتخرج برا الفريم
-      //         newWidth = Math.min(newWidth, targetFrame.width);
-      //         newHeight = Math.min(newHeight, targetFrame.height);
-      //         break;
-
-
-      //       case "stretch":
-      //         newWidth = targetFrame.width;
-      //         newHeight = targetFrame.height;
-      //         offsetX = 0;
-      //         offsetY = 0;
-      //         break;
-
-      //       default:
-      //         newWidth = targetFrame.width;
-      //         newHeight = targetFrame.height;
-      //         offsetX = 0;
-      //         offsetY = 0;
-      //         break;
-      //     }
-
-      //     return {
-      //       x: targetFrame.x + offsetX,
-      //       y: targetFrame.y + offsetY,
-      //       width: newWidth,
-      //       height: newHeight,
-      //       fitMode: newFitMode,
-      //       width_percent: toPercent(newWidth, stageWidth),
-      //       height_percent: toPercent(newHeight, stageHeight),
-      //       x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
-      //       y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
-      //     };
-      //   };
-
-      //   if (frame) {
-      //     // Ensure image fits frame on initial render or when fit mode/frame changes
-      //     useEffect(() => {
-      //       if (image) {
-      //         const imageUpdates = applyFitMode(currentFitMode, frame, element, image);
-      //         dispatch(
-      //           updateElement({
-      //             id: element.id,
-      //             updates: {
-      //               ...imageUpdates,
-      //               rotation: frame.rotation, 
-      //             },
-      //           })
-      //         );
-      //       }
-      //     }, [currentFitMode, frame.width, frame.height, frame.x, frame.y, frame.rotation, image]);
-
-      //     return (
-      //       <>
-      //         <Group
-      //           x={frame.x}
-      //           y={frame.y}
-      //           rotation={frame.rotation}
-      //           draggable
-      //           onClick={onSelect}
-      //           onDragMove={(e) => {
-      //             const node = e.target;
-      //             const newX = node.x();
-      //             const newY = node.y();
-
-      //             // Update frame position
-      //             dispatch(
-      //               updateElement({
-      //                 id: frame.id,
-      //                 updates: {
-      //                   x: newX,
-      //                   y: newY,
-      //                   width_percent: toPercent(frame.width, stageWidth),
-      //                   height_percent: toPercent(frame.height, stageHeight),
-      //                   x_percent: toPercent(newX, stageWidth),
-      //                   y_percent: toPercent(newY, stageHeight),
-      //                 },
-      //               })
-      //             );
-
-      //             // Update image position based on fit mode
-      //             if (image) {
-      //               const imageUpdates = applyFitMode(currentFitMode, { ...frame, x: newX, y: newY }, element, image);
-      //               dispatch(
-      //                 updateElement({
-      //                   id: element.id,
-      //                   updates: {
-      //                     ...imageUpdates,
-      //                     rotation: frame.rotation, // Maintain rotation alignment
-      //                   },
-      //                 })
-      //               );
-      //             }
-
-      //           }}
-      //           onTransform={(e) => {
-      //             const node = e.target;
-      //             const newWidth = node.width() * node.scaleX();
-      //             const newHeight = node.height() * node.scaleY();
-      //             const newX = node.x();
-      //             const newY = node.y();
-
-      //             // Update frame
-      //             dispatch(
-      //               updateElement({
-      //                 id: frame.id,
-      //                 updates: {
-      //                   x: newX,
-      //                   y: newY,
-      //                   width: newWidth,
-      //                   height: newHeight,
-      //                   rotation: node.rotation(),
-      //                   width_percent: toPercent(newWidth, stageWidth),
-      //                   height_percent: toPercent(newHeight, stageHeight),
-      //                   x_percent: toPercent(newX, stageWidth),
-      //                   y_percent: toPercent(newY, stageHeight),
-      //                 },
-      //               })
-      //             );
-
-      //             const updatedFrame: CanvasFrameElement = {
-      //               ...frame,
-      //               x: newX,
-      //               y: newY,
-      //               width: newWidth,
-      //               height: newHeight,
-      //             };
-
-      //             // Update image based on fit mode
-      //             if(image){
-      //                 const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
-      //                 dispatch(
-      //                   updateElement({
-      //                     id: element.id,
-      //                     updates: {
-      //                       ...imageUpdates,
-      //                       rotation: node.rotation(), // Align rotation with frame
-      //                     },
-      //                   })
-      //                 );
-      //             }
-
-      //             node.scaleX(1);
-      //             node.scaleY(1);
-      //           }}>
-      //           <Rect
-      //             x={0}
-      //             y={0}
-      //             width={frame.width}
-      //             height={frame.height}
-      //             fill={frame.fill}
-      //             dash={[4, 4]}
-      //             stroke={frame.stroke}
-      //             strokeWidth={frame.strokeWidth}
-      //           />
-      //           <KonvaImage
-      //             ref={ref}
-      //             image={image}
-      //             x={element.x - frame.x}
-      //             y={element.y - frame.y}
-      //             width={element.width}
-      //             height={element.height}
-      //             clipFunc={(ctx: CanvasRenderingContext2D) => {
-      //               ctx.rect(0, 0, frame.width, frame.height);
-      //             }}
-      //             onTransform={(e) => {
-      //               const node = e.target;
-      //               const newWidth = node.width() * node.scaleX();
-      //               const newHeight = node.height() * node.scaleY();
-      //               const newX = node.x() + frame.x; // Adjust for group offset
-      //               const newY = node.y() + frame.y;
-
-      //               // Update frame to match image size
-      //               dispatch(
-      //                 updateElement({
-      //                   id: frame.id,
-      //                   updates: {
-      //                     x: newX,
-      //                     y: newY,
-      //                     width: newWidth,
-      //                     height: newHeight,
-      //                     rotation: node.rotation(),
-      //                     width_percent: toPercent(newWidth, stageWidth),
-      //                     height_percent: toPercent(newHeight, stageHeight),
-      //                     x_percent: toPercent(newX, stageWidth),
-      //                     y_percent: toPercent(newY, stageHeight),
-      //                   },
-      //                 })
-      //               );
-
-      //               const updatedFrame: CanvasFrameElement = {
-      //                 ...frame,
-      //                 x: newX,
-      //                 y: newY,
-      //                 width: newWidth,
-      //                 height: newHeight,
-      //               };
-
-      //               // Update image with fit mode
-      //               if(image){
-      //                 const imageUpdates = applyFitMode(currentFitMode, updatedFrame, element, image);
-      //                 dispatch(
-      //                   updateElement({
-      //                     id: element.id,
-      //                     updates: {
-      //                       ...imageUpdates,
-      //                       rotation: node.rotation(), 
-      //                     },
-      //                   })
-      //                 );
-      //               }
-
-      //               node.scaleX(1);
-      //               node.scaleY(1);
-      //             }}
-      //           />
-      //         </Group>
-      //       </>
-      //     );
-      //   }
-
-      //   // Image without a frame
-      //   return (
-      //     <KonvaImage
-      //       ref={ref}
-      //       image={image}
-      //       x={element.x}
-      //       y={element.y}
-      //       width={element.width}
-      //       height={element.height}
-      //       rotation={element.rotation}
-      //       draggable
-      //       onClick={onSelect}
-      //       onDragMove={(e) => {
-      //         const node = e.target;
-      //         const newX = node.x();
-      //         const newY = node.y();
-
-      //         // Update image position
-      //         dispatch(
-      //           updateElement({
-      //             id: element.id,
-      //             updates: {
-      //               x: newX,
-      //               y: newY,
-      //               width_percent: toPercent(element.width, stageWidth),
-      //               height_percent: toPercent(element.height, stageHeight),
-      //               x_percent: toPercent(newX, stageWidth),
-      //               y_percent: toPercent(newY, stageHeight),
-      //             },
-      //           })
-      //         );
-
-      //         // Check for frame association
-      //         const frames = (elements as CanvasElement[]).filter(
-      //           (el) =>
-      //             el.type === "frame" &&
-      //             newX + element.width / 2 >= el.x &&
-      //             newX + element.width / 2 <= el.x + el.width &&
-      //             newY + element.height / 2 >= el.y &&
-      //             newY + element.height / 2 <= el.y + el.height
-      //         )
-      //         .sort((a, b) => elements.indexOf(b) - elements.indexOf(a));
-
-      //         const targetFrame = frames[0];
-
-      //         if (!targetFrame) {
-      //           wasOverFrameRef.current = false;
-      //           return;
-      //         }
-
-      //         const isAlreadyHasImage = elements.some(
-      //           (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
-      //         );
-
-      //         if (isAlreadyHasImage) {
-      //           return;
-      //         }
-
-      //         if (!wasOverFrameRef.current && image) {
-      //           const imageUpdates = applyFitMode(currentFitMode, targetFrame as CanvasFrameElement, element, image);
-      //           dispatch(
-      //             updateElement({
-      //               id: element.id,
-      //               updates: {
-      //                 ...imageUpdates,
-      //                 frameId: targetFrame.id,
-      //                 rotation: targetFrame.rotation, // Align rotation with frame
-      //               },
-      //             })
-      //           );
-      //           wasOverFrameRef.current = true;
-      //         }
-      //       }}
-      //       onDragEnd={(e) => {
-      //         const node = e.target;
-      //         const newX = node.x();
-      //         const newY = node.y();
-
-      //         // Check for frame association
-      //         const frames = elements
-      //           .filter(
-      //             (el:CanvasElement) =>
-      //               el.type === "frame" &&
-      //               newX + element.width / 2 >= el.x &&
-      //               newX + element.width / 2 <= el.x + el.width &&
-      //               newY + element.height / 2 >= el.y &&
-      //               newY + element.height / 2 <= el.y + el.height
-      //           )
-      //           .sort((a:CanvasElement, b:CanvasElement) => elements.indexOf(b) - elements.indexOf(a));
-
-      //         const targetFrame = frames[0];
-
-      //         if (targetFrame) {
-      //           const isAlreadyHasImage = elements.some(
-      //             (el:CanvasElement) => el.type === "image" && el.frameId === targetFrame.id && el.id !== element.id
-      //           );
-
-      //           if (isAlreadyHasImage) {
-      //             dispatch(
-      //               updateElement({
-      //                 id: element.id,
-      //                 updates: {
-      //                   x: newX,
-      //                   y: newY,
-      //                   frameId: null,
-      //                   width_percent: toPercent(element.width, stageWidth),
-      //                   height_percent: toPercent(element.height, stageHeight),
-      //                   x_percent: toPercent(newX, stageWidth),
-      //                   y_percent: toPercent(newY, stageHeight),
-      //                 },
-      //               })
-      //             );
-      //             wasOverFrameRef.current = false;
-      //             return;
-      //           }
-
-      //           if (image) {
-      //             const imageUpdates = applyFitMode(currentFitMode, targetFrame, element, image);
-      //             dispatch(
-      //               updateElement({
-      //                 id: element.id,
-      //                 updates: {
-      //                   ...imageUpdates,
-      //                   frameId: targetFrame.id,
-      //                   rotation: targetFrame.rotation,
-      //                 },
-      //               })
-      //             );
-      //           } else {
-      //             dispatch(
-      //               updateElement({
-      //                 id: element.id,
-      //                 updates: {
-      //                   x: newX,
-      //                   y: newY,
-      //                   frameId: null,
-      //                   width_percent: toPercent(element.width, stageWidth),
-      //                   height_percent: toPercent(element.height, stageHeight),
-      //                   x_percent: toPercent(newX, stageWidth),
-      //                   y_percent: toPercent(newY, stageHeight),
-      //                 },
-      //               })
-      //             );
-      //           }
-
-      //           wasOverFrameRef.current = false;
-      //         }
-      //       }}
-      //       onTransform={(e) => {
-      //         const node = e.target;
-      //         const newWidth = node.width() * node.scaleX();
-      //         const newHeight = node.height() * node.scaleY();
-      //         const newX = node.x();
-      //         const newY = node.y();
-
-      //         dispatch(
-      //           updateElement({
-      //             id: element.id,
-      //             updates: {
-      //               x: newX,
-      //               y: newY,
-      //               width: newWidth,
-      //               height: newHeight,
-      //               rotation: node.rotation(),
-      //               width_percent: toPercent(newWidth, stageWidth),
-      //               height_percent: toPercent(newHeight, stageHeight),
-      //               x_percent: toPercent(newX, stageWidth),
-      //               y_percent: toPercent(newY, stageHeight),
-      //             },
-      //           })
-      //         );
-
-      //         node.scaleX(1);
-      //         node.scaleY(1);
-      //       }}
-      //     />
-      //   );
-      // }
 
       case "image": {
         const [image] = useImage(element.src || "");
@@ -1853,162 +1415,65 @@ export const ElementRenderer = forwardRef<any, Props>(
         // Image without a frame (unchanged)
         return (
           <>
-            <KonvaImage
-              ref={ref}
-              image={image}
-              x={element.x}
-              y={element.y}
-              width={element.width}
-              height={element.height}
-              draggable
-              onClick={() => {
-                if (onSelect) {
-                  onSelect();
-                }
-              }}
-              onDragMove={(e) => {
-                const imageNode = e.target;
-                const imgX = imageNode.x();
-                const imgY = imageNode.y();
-                const imgW = imageNode.width();
-                const imgH = imageNode.height();
+            {(element.visible ?? true) && (
+              <KonvaImage
+                ref={ref}
+                image={image}
+                x={element.x}
+                y={element.y}
+                width={element.width}
+                height={element.height}
+                draggable
+                onClick={() => {
+                  if (onSelect) {
+                    onSelect();
+                  }
+                }}
+                onDragMove={(e) => {
+                  const imageNode = e.target;
+                  const imgX = imageNode.x();
+                  const imgY = imageNode.y();
+                  const imgW = imageNode.width();
+                  const imgH = imageNode.height();
 
-                const centerX = imgX + imgW / 2;
-                const centerY = imgY + imgH / 2;
+                  const centerX = imgX + imgW / 2;
+                  const centerY = imgY + imgH / 2;
 
-                dispatch(
-                  updateElement({
-                    id: element.id,
-                    updates: {
-                      x: imgX,
-                      y: imgY,
-                      width_percent: toPercent(imgW, stageWidth),
-                      height_percent: toPercent(imgH, stageHeight),
-                      x_percent: toPercent(imgX, stageWidth),
-                      y_percent: toPercent(imgY, stageHeight),
-                    },
-                  })
-                );
-
-                const frames = elements
-                  .filter(
-                    (el: CanvasElement) =>
-                      el.type === "frame" &&
-                      centerX >= el.x &&
-                      centerX <= el.x + el.width &&
-                      centerY >= el.y &&
-                      centerY <= el.y + el.height
-                  )
-                  .sort(
-                    (a: CanvasElement, b: CanvasElement) =>
-                      elements.indexOf(b) - elements.indexOf(a)
+                  dispatch(
+                    updateElement({
+                      id: element.id,
+                      updates: {
+                        x: imgX,
+                        y: imgY,
+                        width_percent: toPercent(imgW, stageWidth),
+                        height_percent: toPercent(imgH, stageHeight),
+                        x_percent: toPercent(imgX, stageWidth),
+                        y_percent: toPercent(imgY, stageHeight),
+                      },
+                    })
                   );
 
-                const frame = frames[0];
+                  const frames = elements
+                    .filter(
+                      (el: CanvasElement) =>
+                        el.type === "frame" &&
+                        centerX >= el.x &&
+                        centerX <= el.x + el.width &&
+                        centerY >= el.y &&
+                        centerY <= el.y + el.height
+                    )
+                    .sort(
+                      (a: CanvasElement, b: CanvasElement) =>
+                        elements.indexOf(b) - elements.indexOf(a)
+                    );
 
-                if (!frame) {
-                  wasOverFrameRef.current = false;
-                  return;
-                }
+                  const frame = frames[0];
 
-                const isAlreadyHasImage = elements.some(
-                  (el: CanvasElement) =>
-                    el.type === "image" &&
-                    el.frameId === frame.id &&
-                    el.id !== element.id
-                );
-
-                if (isAlreadyHasImage) {
-                  return;
-                }
-
-                if (!wasOverFrameRef.current) {
-                  const frameAspect = frame.width / frame.height;
-                  const imgAspect = imgW / imgH;
-
-                  let newWidth, newHeight, offsetX, offsetY;
-
-                  switch (currentFitMode) {
-                    case "fit":
-                      if (imgAspect > frameAspect) {
-                        newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
-                        newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
-
-                    case "fill":
-                      if (imgAspect < frameAspect) {
-                        newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
-                        newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
-
-                    case "stretch":
-                      newWidth = frame.width;
-                      newHeight = frame.height;
-                      break;
-
-                    default:
-                      if (imgAspect < frameAspect) {
-                        newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
-                        newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
+                  if (!frame) {
+                    wasOverFrameRef.current = false;
+                    return;
                   }
 
-                  offsetX = (frame.width - newWidth) / 2;
-                  offsetY = (frame.height - newHeight) / 2;
-
-                  onChange({
-                    x: frame.x + offsetX,
-                    y: frame.y + offsetY,
-                    width: newWidth,
-                    height: newHeight,
-                    frameId: frame.id,
-                    fitMode: currentFitMode,
-                    width_percent: toPercent(newWidth, stageWidth),
-                    height_percent: toPercent(newHeight, stageHeight),
-                    x_percent: toPercent(frame.x + offsetX, stageWidth),
-                    y_percent: toPercent(frame.y + offsetY, stageHeight),
-                  });
-
-                  wasOverFrameRef.current = true;
-                }
-              }}
-              onDragEnd={(e) => {
-                const img = e.target;
-                const imgW = img.width();
-                const imgH = img.height();
-
-                const centerX = img.x() + imgW / 2;
-                const centerY = img.y() + imgH / 2;
-
-                const frames = elements
-                  .filter(
-                    (el: CanvasElement) =>
-                      el.type === "frame" &&
-                      centerX >= el.x &&
-                      centerX <= el.x + el.width &&
-                      centerY >= el.y &&
-                      centerY <= el.y + el.height
-                  )
-                  .sort(
-                    (a: CanvasElement, b: CanvasElement) =>
-                      elements.indexOf(b) - elements.indexOf(a)
-                  );
-
-                const frame = frames[0];
-
-                if (frame) {
                   const isAlreadyHasImage = elements.some(
                     (el: CanvasElement) =>
                       el.type === "image" &&
@@ -2017,97 +1482,196 @@ export const ElementRenderer = forwardRef<any, Props>(
                   );
 
                   if (isAlreadyHasImage) {
-                    onChange({ x: img.x(), y: img.y(), frameId: null });
-                    wasOverFrameRef.current = false;
                     return;
                   }
 
-                  const frameAspect = frame.width / frame.height;
-                  const imgAspect = imgW / imgH;
+                  if (!wasOverFrameRef.current) {
+                    const frameAspect = frame.width / frame.height;
+                    const imgAspect = imgW / imgH;
 
-                  let newWidth, newHeight, offsetX, offsetY;
+                    let newWidth, newHeight, offsetX, offsetY;
 
-                  switch (currentFitMode) {
-                    case "fit":
-                      if (imgAspect > frameAspect) {
+                    switch (currentFitMode) {
+                      case "fit":
+                        if (imgAspect > frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+
+                      case "fill":
+                        if (imgAspect < frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+
+                      case "stretch":
                         newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
                         newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
+                        break;
 
-                    case "fill":
-                      if (imgAspect < frameAspect) {
+                      default:
+                        if (imgAspect < frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+                    }
+
+                    offsetX = (frame.width - newWidth) / 2;
+                    offsetY = (frame.height - newHeight) / 2;
+
+                    onChange({
+                      x: frame.x + offsetX,
+                      y: frame.y + offsetY,
+                      width: newWidth,
+                      height: newHeight,
+                      frameId: frame.id,
+                      fitMode: currentFitMode,
+                      width_percent: toPercent(newWidth, stageWidth),
+                      height_percent: toPercent(newHeight, stageHeight),
+                      x_percent: toPercent(frame.x + offsetX, stageWidth),
+                      y_percent: toPercent(frame.y + offsetY, stageHeight),
+                    });
+
+                    wasOverFrameRef.current = true;
+                  }
+                }}
+                onDragEnd={(e) => {
+                  const img = e.target;
+                  const imgW = img.width();
+                  const imgH = img.height();
+
+                  const centerX = img.x() + imgW / 2;
+                  const centerY = img.y() + imgH / 2;
+
+                  const frames = elements
+                    .filter(
+                      (el: CanvasElement) =>
+                        el.type === "frame" &&
+                        centerX >= el.x &&
+                        centerX <= el.x + el.width &&
+                        centerY >= el.y &&
+                        centerY <= el.y + el.height
+                    )
+                    .sort(
+                      (a: CanvasElement, b: CanvasElement) =>
+                        elements.indexOf(b) - elements.indexOf(a)
+                    );
+
+                  const frame = frames[0];
+
+                  if (frame) {
+                    const isAlreadyHasImage = elements.some(
+                      (el: CanvasElement) =>
+                        el.type === "image" &&
+                        el.frameId === frame.id &&
+                        el.id !== element.id
+                    );
+
+                    if (isAlreadyHasImage) {
+                      onChange({ x: img.x(), y: img.y(), frameId: null });
+                      wasOverFrameRef.current = false;
+                      return;
+                    }
+
+                    const frameAspect = frame.width / frame.height;
+                    const imgAspect = imgW / imgH;
+
+                    let newWidth, newHeight, offsetX, offsetY;
+
+                    switch (currentFitMode) {
+                      case "fit":
+                        if (imgAspect > frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+
+                      case "fill":
+                        if (imgAspect < frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+
+                      case "stretch":
                         newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
                         newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
+                        break;
 
-                    case "stretch":
-                      newWidth = frame.width;
-                      newHeight = frame.height;
-                      break;
+                      default:
+                        if (imgAspect < frameAspect) {
+                          newWidth = frame.width;
+                          newHeight = frame.width / imgAspect;
+                        } else {
+                          newHeight = frame.height;
+                          newWidth = frame.height * imgAspect;
+                        }
+                        break;
+                    }
 
-                    default:
-                      if (imgAspect < frameAspect) {
-                        newWidth = frame.width;
-                        newHeight = frame.width / imgAspect;
-                      } else {
-                        newHeight = frame.height;
-                        newWidth = frame.height * imgAspect;
-                      }
-                      break;
+                    offsetX = (frame.width - newWidth) / 2;
+                    offsetY = (frame.height - newHeight) / 2;
+
+                    onChange({
+                      x: frame.x + offsetX,
+                      y: frame.y + offsetY,
+                      width: newWidth,
+                      height: newHeight,
+                      frameId: frame.id,
+                      fitMode: currentFitMode,
+                      width_percent: toPercent(newWidth, stageWidth),
+                      height_percent: toPercent(newHeight, stageHeight),
+                      x_percent: toPercent(frame.x + offsetX, stageWidth),
+                      y_percent: toPercent(frame.y + offsetY, stageHeight),
+                    });
+                  } else {
+                    onChange({ x: img.x(), y: img.y(), frameId: null });
                   }
 
-                  offsetX = (frame.width - newWidth) / 2;
-                  offsetY = (frame.height - newHeight) / 2;
+                  wasOverFrameRef.current = false;
+                }}
+                onTransform={(e) => {
+                  const node = e.target;
+                  const newWidth = node.width() * node.scaleX();
+                  const newHeight = node.height() * node.scaleY();
+                  const newX = node.x();
+                  const newY = node.y();
 
                   onChange({
-                    x: frame.x + offsetX,
-                    y: frame.y + offsetY,
+                    x: newX,
+                    y: newY,
                     width: newWidth,
                     height: newHeight,
-                    frameId: frame.id,
-                    fitMode: currentFitMode,
+                    rotation: node.rotation(),
                     width_percent: toPercent(newWidth, stageWidth),
                     height_percent: toPercent(newHeight, stageHeight),
-                    x_percent: toPercent(frame.x + offsetX, stageWidth),
-                    y_percent: toPercent(frame.y + offsetY, stageHeight),
+                    x_percent: toPercent(newX, stageWidth),
+                    y_percent: toPercent(newY, stageHeight),
                   });
-                } else {
-                  onChange({ x: img.x(), y: img.y(), frameId: null });
-                }
 
-                wasOverFrameRef.current = false;
-              }}
-              onTransform={(e) => {
-                const node = e.target;
-                const newWidth = node.width() * node.scaleX();
-                const newHeight = node.height() * node.scaleY();
-                const newX = node.x();
-                const newY = node.y();
-
-                onChange({
-                  x: newX,
-                  y: newY,
-                  width: newWidth,
-                  height: newHeight,
-                  rotation: node.rotation(),
-                  width_percent: toPercent(newWidth, stageWidth),
-                  height_percent: toPercent(newHeight, stageHeight),
-                  x_percent: toPercent(newX, stageWidth),
-                  y_percent: toPercent(newY, stageHeight),
-                });
-
-                node.scaleX(1);
-                node.scaleY(1);
-              }}
-            />
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
             {element.isSelected && (
               <div
                 style={{
@@ -2175,7 +1739,6 @@ export const ElementRenderer = forwardRef<any, Props>(
           </Group>
         );
       }
-      
 
       case "rectangle":
         const rectangleElement = element as RectangleShape;
@@ -2193,53 +1756,57 @@ export const ElementRenderer = forwardRef<any, Props>(
           ];
         }
         return (
-          <Rect
-            ref={ref}
-            x={rectangleElement.x}
-            y={rectangleElement.y}
-            width={rectangleElement.width}
-            height={rectangleElement.height}
-            fill={brandedFillRect}
-            stroke={brandedStrokeRect}
-            strokeWidth={rectangleElement.strokeWidth}
-            rotation={rectangleElement.rotation}
-            cornerRadius={cornerRadiusValue}
-            opacity={rectangleElement.opacity}
-            draggable
-            offsetX={rectangleElement.width / 2}
-            offsetY={rectangleElement.height / 2}
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(element.x, stageWidth),
-                y_percent: toPercent(element.y, stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const newWidth = node.width() * node.scaleX();
-              const newHeight = node.height() * node.scaleY();
-
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                width: newWidth,
-                height: newHeight,
-                width_percent: toPercent(newWidth, stageWidth),
-                height_percent: toPercent(newHeight, stageHeight),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                rotation: node.rotation(),
-              });
-
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+          <>
+            {(element.visible ?? true) && (
+              <Rect
+                ref={ref}
+                x={rectangleElement.x}
+                y={rectangleElement.y}
+                width={rectangleElement.width}
+                height={rectangleElement.height}
+                fill={brandedFillRect}
+                stroke={brandedStrokeRect}
+                strokeWidth={rectangleElement.strokeWidth}
+                rotation={rectangleElement.rotation}
+                cornerRadius={cornerRadiusValue}
+                opacity={rectangleElement.opacity}
+                draggable
+                offsetX={rectangleElement.width / 2}
+                offsetY={rectangleElement.height / 2}
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(element.x, stageWidth),
+                    y_percent: toPercent(element.y, stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const newWidth = node.width() * node.scaleX();
+                  const newHeight = node.height() * node.scaleY();
+  
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    width: newWidth,
+                    height: newHeight,
+                    width_percent: toPercent(newWidth, stageWidth),
+                    height_percent: toPercent(newHeight, stageHeight),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    rotation: node.rotation(),
+                  });
+  
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
 
       case "circle":
@@ -2248,48 +1815,51 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeCircle = getBrandedStroke(circleElement);
 
         return (
-          <Circle
-            ref={ref}
-            x={circleElement.x}
-            y={circleElement.y}
-            radius={circleElement.radius}
-            fill={brandedFillCircle}
-            stroke={brandedStrokeCircle}
-            strokeWidth={circleElement.strokeWidth}
-            rotation={circleElement.rotation}
-            opacity={circleElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) => {
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(element.x, stageWidth),
-                y_percent: toPercent(element.y, stageHeight),
-              });
-            }}
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
+          <>
+            {(element.visible ?? true) && 
+              <Circle
+              ref={ref}
+              x={circleElement.x}
+              y={circleElement.y}
+              radius={circleElement.radius}
+              fill={brandedFillCircle}
+              stroke={brandedStrokeCircle}
+              strokeWidth={circleElement.strokeWidth}
+              rotation={circleElement.rotation}
+              opacity={circleElement.opacity}
+              draggable
+              onClick={onSelect}
+              onDragMove={(e) => {
+                onChange({
+                  x: e.target.x(),
+                  y: e.target.y(),
+                  width_percent: toPercent(element.width, stageWidth),
+                  height_percent: toPercent(element.height, stageHeight),
+                  x_percent: toPercent(element.x, stageWidth),
+                  y_percent: toPercent(element.y, stageHeight),
+                });
+              }}
+              onTransform={(e) => {
+                const node = e.target;
+                const scaleX = node.scaleX();
+                const scaleY = node.scaleY();
 
-              const newRadius = (circleElement.radius * (scaleX + scaleY)) / 2;
+                const newRadius = (circleElement.radius * (scaleX + scaleY)) / 2;
 
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                radius: newRadius,
-                rotation: node.rotation(),
-              });
+                onChange({
+                  x: node.x(),
+                  y: node.y(),
+                  x_percent: toPercent(node.x(), stageWidth),
+                  y_percent: toPercent(node.y(), stageHeight),
+                  radius: newRadius,
+                  rotation: node.rotation(),
+                });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                node.scaleX(1);
+                node.scaleY(1);
+              }}
+              />}
+          </>
         );
 
       case "ellipse":
@@ -2298,49 +1868,53 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeEllipse = getBrandedStroke(ellipseElement);
 
         return (
-          <Ellipse
-            ref={ref}
-            x={ellipseElement.x}
-            y={ellipseElement.y}
-            radiusX={ellipseElement.radiusX}
-            radiusY={ellipseElement.radiusY}
-            fill={brandedFillEllipse}
-            stroke={brandedStrokeEllipse}
-            strokeWidth={ellipseElement.strokeWidth}
-            rotation={ellipseElement.rotation}
-            opacity={ellipseElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) => {
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(element.x, stageWidth),
-                y_percent: toPercent(element.y, stageHeight),
-              });
-            }}
-            onTransform={(e) => {
-              const node = e.target;
+          <>
+            {(element.visible ?? true) && (
+              <Ellipse
+                ref={ref}
+                x={ellipseElement.x}
+                y={ellipseElement.y}
+                radiusX={ellipseElement.radiusX}
+                radiusY={ellipseElement.radiusY}
+                fill={brandedFillEllipse}
+                stroke={brandedStrokeEllipse}
+                strokeWidth={ellipseElement.strokeWidth}
+                rotation={ellipseElement.rotation}
+                opacity={ellipseElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) => {
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(element.x, stageWidth),
+                    y_percent: toPercent(element.y, stageHeight),
+                  });
+                }}
+                onTransform={(e) => {
+                  const node = e.target;
 
-              const newRadiusX = ellipseElement.radiusX * node.scaleX();
-              const newRadiusY = ellipseElement.radiusY * node.scaleY();
+                  const newRadiusX = ellipseElement.radiusX * node.scaleX();
+                  const newRadiusY = ellipseElement.radiusY * node.scaleY();
 
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                radiusX: newRadiusX,
-                radiusY: newRadiusY,
-                rotation: node.rotation(),
-              });
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    radiusX: newRadiusX,
+                    radiusY: newRadiusY,
+                    rotation: node.rotation(),
+                  });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
 
       case "line":
@@ -2359,52 +1933,56 @@ export const ElementRenderer = forwardRef<any, Props>(
         ];
 
         return (
-          <Line
-            ref={ref}
-            x={lineElement.x + centerX}
-            y={lineElement.y + centerY}
-            points={adjustedPoints}
-            fill={lineElement.fill}
-            stroke={brandedStrokeLine}
-            strokeWidth={lineElement.strokeWidth}
-            rotation={lineElement.rotation}
-            opacity={lineElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x() - centerX,
-                y: e.target.y() - centerY,
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(e.target.x() - centerX, stageWidth),
-                y_percent: toPercent(e.target.y() - centerY, stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
+          <>
+          {(element.visible ?? true) && (
+            <Line
+              ref={ref}
+              x={lineElement.x + centerX}
+              y={lineElement.y + centerY}
+              points={adjustedPoints}
+              fill={lineElement.fill}
+              stroke={brandedStrokeLine}
+              strokeWidth={lineElement.strokeWidth}
+              rotation={lineElement.rotation}
+              opacity={lineElement.opacity}
+              draggable
+              onClick={onSelect}
+              onDragMove={(e) =>
+                onChange({
+                  x: e.target.x() - centerX,
+                  y: e.target.y() - centerY,
+                  width_percent: toPercent(element.width, stageWidth),
+                  height_percent: toPercent(element.height, stageHeight),
+                  x_percent: toPercent(e.target.x() - centerX, stageWidth),
+                  y_percent: toPercent(e.target.y() - centerY, stageHeight),
+                })
+              }
+              onTransform={(e) => {
+                const node = e.target;
+                const scaleX = node.scaleX();
+                const scaleY = node.scaleY();
 
-              const newPoints = adjustedPoints.map((point, index) =>
-                index % 2 === 0 ? point * scaleX : point * scaleY
-              );
+                const newPoints = adjustedPoints.map((point, index) =>
+                  index % 2 === 0 ? point * scaleX : point * scaleY
+                );
 
-              onChange({
-                x: node.x() - centerX,
-                y: node.y() - centerY,
-                x_percent: toPercent(node.x() - centerX, stageWidth),
-                y_percent: toPercent(node.y() - centerY, stageHeight),
-                rotation: node.rotation(),
-                points: newPoints.map((p, i) =>
-                  i % 2 === 0 ? p + centerX : p + centerY
-                ),
-              });
+                onChange({
+                  x: node.x() - centerX,
+                  y: node.y() - centerY,
+                  x_percent: toPercent(node.x() - centerX, stageWidth),
+                  y_percent: toPercent(node.y() - centerY, stageHeight),
+                  rotation: node.rotation(),
+                  points: newPoints.map((p, i) =>
+                    i % 2 === 0 ? p + centerX : p + centerY
+                  ),
+                });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                node.scaleX(1);
+                node.scaleY(1);
+              }}
+            />
+          )}
+          </>
         );
 
       case "triangle":
@@ -2413,52 +1991,56 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeTriangle = getBrandedStroke(triangleElement);
 
         return (
-          <RegularPolygon
-            ref={ref}
-            x={triangleElement.x}
-            y={triangleElement.y}
-            sides={3}
-            radius={Math.max(triangleElement.width, triangleElement.height) / 2}
-            fill={brandedFillTriangle}
-            stroke={brandedStrokeTriangle}
-            strokeWidth={triangleElement.strokeWidth}
-            rotation={triangleElement.rotation}
-            opacity={triangleElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(e.target.x(), stageWidth),
-                y_percent: toPercent(e.target.y(), stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
+          <>
+            {(element.visible ?? true) && (
+              <RegularPolygon
+                ref={ref}
+                x={triangleElement.x}
+                y={triangleElement.y}
+                sides={3}
+                radius={Math.max(triangleElement.width, triangleElement.height) / 2}
+                fill={brandedFillTriangle}
+                stroke={brandedStrokeTriangle}
+                strokeWidth={triangleElement.strokeWidth}
+                rotation={triangleElement.rotation}
+                opacity={triangleElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(e.target.x(), stageWidth),
+                    y_percent: toPercent(e.target.y(), stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
 
-              const newRadius =
-                (Math.max(triangleElement.width, triangleElement.height) / 2) *
-                Math.max(scaleX, scaleY);
+                  const newRadius =
+                    (Math.max(triangleElement.width, triangleElement.height) / 2) *
+                    Math.max(scaleX, scaleY);
 
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                rotation: node.rotation(),
-                width: newRadius * 2,
-                height: newRadius * 2,
-              });
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    rotation: node.rotation(),
+                    width: newRadius * 2,
+                    height: newRadius * 2,
+                  });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
 
       case "star":
@@ -2467,54 +2049,58 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeStar = getBrandedStroke(starElement);
 
         return (
-          <Star
-            ref={ref}
-            x={starElement.x}
-            y={starElement.y}
-            innerRadius={starElement.innerRadius}
-            outerRadius={starElement.outerRadius}
-            numPoints={starElement.numPoints}
-            fill={brandedFillStar}
-            stroke={brandedStrokeStar}
-            strokeWidth={starElement.strokeWidth}
-            rotation={starElement.rotation}
-            opacity={starElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(e.target.x(), stageWidth),
-                y_percent: toPercent(e.target.y(), stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-
-              const newInnerRadius =
-                starElement.innerRadius * Math.min(scaleX, scaleY);
-              const newOuterRadius =
-                starElement.outerRadius * Math.max(scaleX, scaleY);
-
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                rotation: node.rotation(),
-                innerRadius: newInnerRadius,
-                outerRadius: newOuterRadius,
-              });
-
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+          <>
+            {(element.visible ?? true) && (
+              <Star
+                ref={ref}
+                x={starElement.x}
+                y={starElement.y}
+                innerRadius={starElement.innerRadius}
+                outerRadius={starElement.outerRadius}
+                numPoints={starElement.numPoints}
+                fill={brandedFillStar}
+                stroke={brandedStrokeStar}
+                strokeWidth={starElement.strokeWidth}
+                rotation={starElement.rotation}
+                opacity={starElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(e.target.x(), stageWidth),
+                    y_percent: toPercent(e.target.y(), stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
+  
+                  const newInnerRadius =
+                    starElement.innerRadius * Math.min(scaleX, scaleY);
+                  const newOuterRadius =
+                    starElement.outerRadius * Math.max(scaleX, scaleY);
+  
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    rotation: node.rotation(),
+                    innerRadius: newInnerRadius,
+                    outerRadius: newOuterRadius,
+                  });
+  
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
 
       case "wedge":
@@ -2523,48 +2109,52 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeWedge = getBrandedStroke(wedgeElement);
 
         return (
-          <Wedge
-            ref={ref}
-            x={wedgeElement.x}
-            y={wedgeElement.y}
-            radius={wedgeElement.radius}
-            angle={wedgeElement.angle}
-            fill={brandedFillWedge}
-            stroke={brandedStrokeWedge}
-            strokeWidth={wedgeElement.strokeWidth}
-            rotation={wedgeElement.rotation}
-            opacity={wedgeElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(e.target.x(), stageWidth),
-                y_percent: toPercent(e.target.y(), stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-              const scale = (scaleX + scaleY) / 2;
+          <>
+            {(element.visible ?? true) && (
+              <Wedge
+                ref={ref}
+                x={wedgeElement.x}
+                y={wedgeElement.y}
+                radius={wedgeElement.radius}
+                angle={wedgeElement.angle}
+                fill={brandedFillWedge}
+                stroke={brandedStrokeWedge}
+                strokeWidth={wedgeElement.strokeWidth}
+                rotation={wedgeElement.rotation}
+                opacity={wedgeElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(e.target.x(), stageWidth),
+                    y_percent: toPercent(e.target.y(), stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
+                  const scale = (scaleX + scaleY) / 2;
 
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                radius: wedgeElement.radius * scale,
-                rotation: node.rotation(),
-              });
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    radius: wedgeElement.radius * scale,
+                    rotation: node.rotation(),
+                  });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
 
       case "ring":
@@ -2573,49 +2163,53 @@ export const ElementRenderer = forwardRef<any, Props>(
         const brandedStrokeRing = getBrandedStroke(ringElement);
 
         return (
-          <Ring
-            ref={ref}
-            x={ringElement.x}
-            y={ringElement.y}
-            innerRadius={ringElement.innerRadius}
-            outerRadius={ringElement.outerRadius}
-            fill={brandedFillRing}
-            stroke={brandedStrokeRing}
-            strokeWidth={ringElement.strokeWidth}
-            rotation={ringElement.rotation}
-            opacity={ringElement.opacity}
-            draggable
-            onClick={onSelect}
-            onDragMove={(e) =>
-              onChange({
-                x: e.target.x(),
-                y: e.target.y(),
-                width_percent: toPercent(element.width, stageWidth),
-                height_percent: toPercent(element.height, stageHeight),
-                x_percent: toPercent(e.target.x(), stageWidth),
-                y_percent: toPercent(e.target.y(), stageHeight),
-              })
-            }
-            onTransform={(e) => {
-              const node = e.target;
-              const scaleX = node.scaleX();
-              const scaleY = node.scaleY();
-              const scale = (scaleX + scaleY) / 2;
+          <>
+            {(element.visible ?? true) && (
+              <Ring
+                ref={ref}
+                x={ringElement.x}
+                y={ringElement.y}
+                innerRadius={ringElement.innerRadius}
+                outerRadius={ringElement.outerRadius}
+                fill={brandedFillRing}
+                stroke={brandedStrokeRing}
+                strokeWidth={ringElement.strokeWidth}
+                rotation={ringElement.rotation}
+                opacity={ringElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(e.target.x(), stageWidth),
+                    y_percent: toPercent(e.target.y(), stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
+                  const scale = (scaleX + scaleY) / 2;
 
-              onChange({
-                x: node.x(),
-                y: node.y(),
-                x_percent: toPercent(node.x(), stageWidth),
-                y_percent: toPercent(node.y(), stageHeight),
-                innerRadius: ringElement.innerRadius * scale,
-                outerRadius: ringElement.outerRadius * scale,
-                rotation: node.rotation(),
-              });
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    innerRadius: ringElement.innerRadius * scale,
+                    outerRadius: ringElement.outerRadius * scale,
+                    rotation: node.rotation(),
+                  });
 
-              node.scaleX(1);
-              node.scaleY(1);
-            }}
-          />
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
+          </>
         );
       /* qr code */
       // case "qrcode": {

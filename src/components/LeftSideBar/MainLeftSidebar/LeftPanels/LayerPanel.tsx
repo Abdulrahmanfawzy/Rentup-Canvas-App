@@ -1,6 +1,6 @@
-import { moveElementDown, moveElementUp, selectElement } from "@/features/canvas/canvasSlice";
+import { moveElementDown, moveElementUp, selectElement,toggleElementVisibility } from "@/features/canvas/canvasSlice";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
-import { HiChevronUp, HiChevronDown, HiChevronRight } from "react-icons/hi";
+import { HiChevronUp, HiChevronDown, HiChevronRight, HiEye, HiEyeOff } from "react-icons/hi";
 import { useState } from "react";
 import type { CanvasElement } from "@/features/canvas/types";
 
@@ -51,13 +51,14 @@ export function LayerPanel() {
             </span>
           </div>
           <div className="space-x-1 flex">
+            
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 dispatch(moveElementUp(el.id));
               }}
             >
-              <HiChevronUp color="gray" size={32} />
+              <HiChevronUp color="gray" size={20} />
             </button>
             <button
               onClick={(e) => {
@@ -65,11 +66,25 @@ export function LayerPanel() {
                 dispatch(moveElementDown(el.id));
               }}
             >
-              <HiChevronDown color="gray" size={32} />
+              <HiChevronDown color="gray" size={20} />
             </button>
+
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                dispatch(toggleElementVisibility(el.id));
+              }}
+            >
+              {el.visible ?? true ? (
+                <HiEye color="gray" size={20} />
+              ) : (
+                <HiEyeOff color="gray" size={20} />
+              )}
+            </button>
+
           </div>
         </div>
-        {/* عرض الـ children لو الفريم مفتوح وفيه children */}
+
         {isExpanded &&
           children.map((child) => (
             <div
@@ -91,7 +106,7 @@ export function LayerPanel() {
   };
 
   return (
-    <div className="p-4 shadow space-y-2">
+    <div className="shadow space-y-2">
       {[...topLevelElements].reverse().map((el) => renderLayer(el))}
     </div>
   );
