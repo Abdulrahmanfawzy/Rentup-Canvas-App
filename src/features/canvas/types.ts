@@ -21,8 +21,6 @@ export type FitMode = "fill" | "fit" | "stretch";
 // | { type: "icon"; iconName: string } // ✅ هنا أضفنا الأيقونة
 
 export interface CanvasElement {
-  backgroundBrandingType: string;
-  colorBrandingType: string;
   id: string;
   type: ElementType;
   x: number;

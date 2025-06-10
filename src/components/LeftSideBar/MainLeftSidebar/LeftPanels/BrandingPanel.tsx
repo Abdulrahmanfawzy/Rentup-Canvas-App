@@ -36,10 +36,7 @@ export function BrandingPanel() {
     elements.forEach((element) => {
       if (
         element.fillBrandingType === key ||
-        element.strokeBrandingType === key ||
-        (element.type === "text" &&
-          (element.colorBrandingType === key ||
-            element.backgroundBrandingType === key))
+        element.strokeBrandingType === key
       ) {
         // Trigger a small update to force re-render
         dispatch(

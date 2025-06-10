@@ -9,6 +9,7 @@ import { FrameProperties } from "./RightPanels/FrameProperties";
 import { ImageProperties } from "./RightPanels/ImageProperties";
 import TextProperties from "./RightPanels/TextProperties";
 import type { CanvasElementUnion, CanvasFrameElement, CanvasTextElement } from "@/features/canvas/types";
+import { IconProperties } from "./RightPanels/IconProperties";
 
 interface RootState {
   ui: {
@@ -96,6 +97,10 @@ const RightSideBar: FC = () => {
 
         {selectedElement?.type === "text" && (
           <TextProperties key="text" element={selectedElement as CanvasTextElement} />
+        )}
+
+        {selectedElement?.type === "icon" && (
+          <IconProperties key="icon" element={selectedElement as CanvasTextElement} />
         )}
 
       </div>

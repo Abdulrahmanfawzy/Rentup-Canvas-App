@@ -26,6 +26,7 @@ import {
   useGetTextLabelQuery,
   usePostTextLabelMutation,
 } from "@/services/textLabelsApi";
+import { useEffect, useState } from "react";
 // Utility type guard for text elements
 const loadGoogleFont = (fontFamily: string) => {
   // Check if font is already loaded
@@ -47,12 +48,6 @@ const loadGoogleFont = (fontFamily: string) => {
 function isTextElement(element: CanvasElement): element is CanvasTextElement {
   return element.type === "text";
 }
-export const BRAND_OPTIONS: BrandingType[] = [
-  "primary",
-  "secondary",
-  "additional",
-  "fixed",
-];
 export default function TextProperties({
   element,
 }: {
@@ -105,7 +100,16 @@ export default function TextProperties({
   const update = <T extends CanvasTextElement>(updates: Partial<T>) => {
     dispatch(updateElement({ id: element.id, updates }));
   };
-  console.log(postTextLabelError);
+  /* Start Branding Handlers */
+  // get colors from store
+  const brandingColors = useAppSelector((state) => state.branding.colors);
+  const [branding, setBranding] = useState<string[]>([]);
+  // Populate branding options from brandingColors
+  useEffect(() => {
+    const keysArray = Object.keys(brandingColors);
+    setBranding(keysArray);
+  }, [brandingColors]);
+  /* End Branding Handlers */
   return (
     <div className="space-y-4">
       <PositionProperties element={element} />
@@ -332,34 +336,15 @@ export default function TextProperties({
             placeholder="Create or select labels..."
           />
           <SelectInput
-            label="Branding Color"
-            value={element.colorBrandingType ?? "fixed"}
+            className="col-span-full"
+            label="Background Branding"
+            value={element.fillBrandingType ?? "fixed"}
             onChange={(val) =>
-              update<CanvasTextElement>({
-                colorBrandingType: val as BrandingType,
+              update({
+                fillBrandingType: val as (typeof branding)[number],
               })
             }
-            options={BRAND_OPTIONS}
-          />
-          <SelectInput
-            label="Branding Background"
-            value={element.backgroundBrandingType ?? "fixed"}
-            onChange={(val) =>
-              update<CanvasTextElement>({
-                backgroundBrandingType: val as BrandingType,
-              })
-            }
-            options={BRAND_OPTIONS}
-          />
-          <SelectInput
-            label="Branding Font"
-            value={element.fontBrandingType ?? "fixed"}
-            onChange={(val) =>
-              update<CanvasTextElement>({
-                fontBrandingType: val as BrandingType,
-              })
-            }
-            options={BRAND_OPTIONS}
+            options={branding as unknown as string[]}
           />
         </>
       )}

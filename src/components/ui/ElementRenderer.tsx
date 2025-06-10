@@ -64,6 +64,12 @@ export const ElementRenderer = forwardRef<any, Props>(
     const getBrandedFill = (element: CanvasElement) => {
       return resolveColor(element.fill, element.fillBrandingType);
     };
+    const getBrandedFillText = (element: CanvasTextElement) => {
+      return resolveColor(
+        element.background ?? "#fff",
+        element.fillBrandingType
+      );
+    };
 
     const getBrandedStroke = (element: CanvasElement) => {
       return resolveColor(
@@ -91,7 +97,6 @@ export const ElementRenderer = forwardRef<any, Props>(
     // };
 
     switch (element.type) {
-      
       case "text":
         const textElement = element as CanvasTextElement;
         const refText = useRef<KonvaText>(null);
@@ -100,8 +105,10 @@ export const ElementRenderer = forwardRef<any, Props>(
         // const [isSelected, setIsSelected] = useState(false);
         const [isEditing, setIsEditing] = useState(false);
         const [editableText, setEditableText] = useState(textElement.text);
-        const isSelected = useSelector((state:RootState) =>
-          state.canvas.elements.find((el) => el.id === textElement.id)?.selected
+        const isSelected = useSelector(
+          (state: RootState) =>
+            state.canvas.elements.find((el) => el.id === textElement.id)
+              ?.selected
         );
         const textAlign = useSelector(
           (state: any) =>
@@ -251,7 +258,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                 y={textElement.y - (textElement.padding || 0)}
                 width={bgSize.width + (textElement.padding || 0) * 2}
                 height={bgSize.height + (textElement.padding || 0) * 2}
-                fill={textElement.background}
+                fill={getBrandedFillText(textElement)}
                 // stroke={textElement.backgroundStroke}
                 // strokeWidth={textElement.backgroundStrokeWidth}
                 opacity={textElement.opacity}
@@ -288,7 +295,10 @@ export const ElementRenderer = forwardRef<any, Props>(
                           x: e.target.x(),
                           y: e.target.y(),
                           width_percent: toPercent(element.width, stageWidth),
-                          height_percent: toPercent(element.height, stageHeight),
+                          height_percent: toPercent(
+                            element.height,
+                            stageHeight
+                          ),
                           x_percent: toPercent(e.target.x(), stageWidth),
                           y_percent: toPercent(e.target.y(), stageHeight),
                           fontSize_percent: toPercentFontSize(
@@ -306,9 +316,9 @@ export const ElementRenderer = forwardRef<any, Props>(
                       30,
                       e.target.width() * e.target.scaleX()
                     );
-    
+
                     // fontSize_percent: toPercentFontSize(20, stageWidth, stageHeight)
-    
+
                     if (node) {
                       node.width(newWidth);
                       node.scaleX(1);
@@ -326,9 +336,9 @@ export const ElementRenderer = forwardRef<any, Props>(
                     node._setTextData();
                     const box = node.getClientRect({ skipTransform: true });
                     const newHeight = box.height;
-    
+
                     setBgSize({ width: newWidth, height: newHeight });
-    
+
                     dispatch(
                       updateElement({
                         id: textElement.id,
@@ -351,7 +361,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                         },
                       })
                     );
-    
+
                     node.scaleX(1);
                     node.scaleY(1);
                   }}
@@ -1048,9 +1058,10 @@ export const ElementRenderer = forwardRef<any, Props>(
       //   );
       // }
 
-
       case "frame": {
-        const imageInFrame = (elements as CanvasElement[]).find((el) => el.type === "image" && el.frameId === element.id);
+        const imageInFrame = (elements as CanvasElement[]).find(
+          (el) => el.type === "image" && el.frameId === element.id
+        );
 
         // If there's an image, skip rendering the frame here as it will be rendered in the image case
         if (imageInFrame) {
@@ -1078,7 +1089,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                   const node = e.target;
                   const newX = node.x();
                   const newY = node.y();
-  
+
                   dispatch(
                     updateElement({
                       id: element.id,
@@ -1099,7 +1110,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                   const newHeight = node.height() * node.scaleY();
                   const newX = node.x();
                   const newY = node.y();
-  
+
                   dispatch(
                     updateElement({
                       id: element.id,
@@ -1116,7 +1127,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                       },
                     })
                   );
-  
+
                   node.scaleX(1);
                   node.scaleY(1);
                 }}
@@ -1374,7 +1385,10 @@ export const ElementRenderer = forwardRef<any, Props>(
                           height: newFrameHeight,
                           rotation: node.rotation(),
                           width_percent: toPercent(newFrameWidth, stageWidth),
-                          height_percent: toPercent(newFrameHeight, stageHeight),
+                          height_percent: toPercent(
+                            newFrameHeight,
+                            stageHeight
+                          ),
                           x_percent: toPercent(newFrameX, stageWidth),
                           y_percent: toPercent(newFrameY, stageHeight),
                         },
@@ -1699,10 +1713,10 @@ export const ElementRenderer = forwardRef<any, Props>(
           </>
         );
       }
-      
+
       case "icon": {
         const [iconImage] = useImage(`https://api.iconify.design/${element.iconName}.svg`);
-
+        
         return (
           <Group
             x={element.x}
@@ -1726,13 +1740,12 @@ export const ElementRenderer = forwardRef<any, Props>(
                 })
               );
             }}
-            onClick={onSelect}>
+            onClick={onSelect}
+          >
             <Image
               image={iconImage}
+              tint={element.color}
               filters={[Konva.Filters.RGB]}
-              red={255}
-              green={255}
-              blue={255}
               width={element.width}
               height={element.height}
             />
@@ -1788,7 +1801,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                   const node = e.target;
                   const newWidth = node.width() * node.scaleX();
                   const newHeight = node.height() * node.scaleY();
-  
+
                   onChange({
                     x: node.x(),
                     y: node.y(),
@@ -1800,7 +1813,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                     y_percent: toPercent(node.y(), stageHeight),
                     rotation: node.rotation(),
                   });
-  
+
                   node.scaleX(1);
                   node.scaleY(1);
                 }}
@@ -1816,49 +1829,51 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         return (
           <>
-            {(element.visible ?? true) && 
+            {(element.visible ?? true) && (
               <Circle
-              ref={ref}
-              x={circleElement.x}
-              y={circleElement.y}
-              radius={circleElement.radius}
-              fill={brandedFillCircle}
-              stroke={brandedStrokeCircle}
-              strokeWidth={circleElement.strokeWidth}
-              rotation={circleElement.rotation}
-              opacity={circleElement.opacity}
-              draggable
-              onClick={onSelect}
-              onDragMove={(e) => {
-                onChange({
-                  x: e.target.x(),
-                  y: e.target.y(),
-                  width_percent: toPercent(element.width, stageWidth),
-                  height_percent: toPercent(element.height, stageHeight),
-                  x_percent: toPercent(element.x, stageWidth),
-                  y_percent: toPercent(element.y, stageHeight),
-                });
-              }}
-              onTransform={(e) => {
-                const node = e.target;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
+                ref={ref}
+                x={circleElement.x}
+                y={circleElement.y}
+                radius={circleElement.radius}
+                fill={brandedFillCircle}
+                stroke={brandedStrokeCircle}
+                strokeWidth={circleElement.strokeWidth}
+                rotation={circleElement.rotation}
+                opacity={circleElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) => {
+                  onChange({
+                    x: e.target.x(),
+                    y: e.target.y(),
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(element.x, stageWidth),
+                    y_percent: toPercent(element.y, stageHeight),
+                  });
+                }}
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
 
-                const newRadius = (circleElement.radius * (scaleX + scaleY)) / 2;
+                  const newRadius =
+                    (circleElement.radius * (scaleX + scaleY)) / 2;
 
-                onChange({
-                  x: node.x(),
-                  y: node.y(),
-                  x_percent: toPercent(node.x(), stageWidth),
-                  y_percent: toPercent(node.y(), stageHeight),
-                  radius: newRadius,
-                  rotation: node.rotation(),
-                });
+                  onChange({
+                    x: node.x(),
+                    y: node.y(),
+                    x_percent: toPercent(node.x(), stageWidth),
+                    y_percent: toPercent(node.y(), stageHeight),
+                    radius: newRadius,
+                    rotation: node.rotation(),
+                  });
 
-                node.scaleX(1);
-                node.scaleY(1);
-              }}
-              />}
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
           </>
         );
 
@@ -1934,54 +1949,54 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         return (
           <>
-          {(element.visible ?? true) && (
-            <Line
-              ref={ref}
-              x={lineElement.x + centerX}
-              y={lineElement.y + centerY}
-              points={adjustedPoints}
-              fill={lineElement.fill}
-              stroke={brandedStrokeLine}
-              strokeWidth={lineElement.strokeWidth}
-              rotation={lineElement.rotation}
-              opacity={lineElement.opacity}
-              draggable
-              onClick={onSelect}
-              onDragMove={(e) =>
-                onChange({
-                  x: e.target.x() - centerX,
-                  y: e.target.y() - centerY,
-                  width_percent: toPercent(element.width, stageWidth),
-                  height_percent: toPercent(element.height, stageHeight),
-                  x_percent: toPercent(e.target.x() - centerX, stageWidth),
-                  y_percent: toPercent(e.target.y() - centerY, stageHeight),
-                })
-              }
-              onTransform={(e) => {
-                const node = e.target;
-                const scaleX = node.scaleX();
-                const scaleY = node.scaleY();
+            {(element.visible ?? true) && (
+              <Line
+                ref={ref}
+                x={lineElement.x + centerX}
+                y={lineElement.y + centerY}
+                points={adjustedPoints}
+                fill={lineElement.fill}
+                stroke={brandedStrokeLine}
+                strokeWidth={lineElement.strokeWidth}
+                rotation={lineElement.rotation}
+                opacity={lineElement.opacity}
+                draggable
+                onClick={onSelect}
+                onDragMove={(e) =>
+                  onChange({
+                    x: e.target.x() - centerX,
+                    y: e.target.y() - centerY,
+                    width_percent: toPercent(element.width, stageWidth),
+                    height_percent: toPercent(element.height, stageHeight),
+                    x_percent: toPercent(e.target.x() - centerX, stageWidth),
+                    y_percent: toPercent(e.target.y() - centerY, stageHeight),
+                  })
+                }
+                onTransform={(e) => {
+                  const node = e.target;
+                  const scaleX = node.scaleX();
+                  const scaleY = node.scaleY();
 
-                const newPoints = adjustedPoints.map((point, index) =>
-                  index % 2 === 0 ? point * scaleX : point * scaleY
-                );
+                  const newPoints = adjustedPoints.map((point, index) =>
+                    index % 2 === 0 ? point * scaleX : point * scaleY
+                  );
 
-                onChange({
-                  x: node.x() - centerX,
-                  y: node.y() - centerY,
-                  x_percent: toPercent(node.x() - centerX, stageWidth),
-                  y_percent: toPercent(node.y() - centerY, stageHeight),
-                  rotation: node.rotation(),
-                  points: newPoints.map((p, i) =>
-                    i % 2 === 0 ? p + centerX : p + centerY
-                  ),
-                });
+                  onChange({
+                    x: node.x() - centerX,
+                    y: node.y() - centerY,
+                    x_percent: toPercent(node.x() - centerX, stageWidth),
+                    y_percent: toPercent(node.y() - centerY, stageHeight),
+                    rotation: node.rotation(),
+                    points: newPoints.map((p, i) =>
+                      i % 2 === 0 ? p + centerX : p + centerY
+                    ),
+                  });
 
-                node.scaleX(1);
-                node.scaleY(1);
-              }}
-            />
-          )}
+                  node.scaleX(1);
+                  node.scaleY(1);
+                }}
+              />
+            )}
           </>
         );
 
@@ -1998,7 +2013,9 @@ export const ElementRenderer = forwardRef<any, Props>(
                 x={triangleElement.x}
                 y={triangleElement.y}
                 sides={3}
-                radius={Math.max(triangleElement.width, triangleElement.height) / 2}
+                radius={
+                  Math.max(triangleElement.width, triangleElement.height) / 2
+                }
                 fill={brandedFillTriangle}
                 stroke={brandedStrokeTriangle}
                 strokeWidth={triangleElement.strokeWidth}
@@ -2022,7 +2039,8 @@ export const ElementRenderer = forwardRef<any, Props>(
                   const scaleY = node.scaleY();
 
                   const newRadius =
-                    (Math.max(triangleElement.width, triangleElement.height) / 2) *
+                    (Math.max(triangleElement.width, triangleElement.height) /
+                      2) *
                     Math.max(scaleX, scaleY);
 
                   onChange({
@@ -2079,12 +2097,12 @@ export const ElementRenderer = forwardRef<any, Props>(
                   const node = e.target;
                   const scaleX = node.scaleX();
                   const scaleY = node.scaleY();
-  
+
                   const newInnerRadius =
                     starElement.innerRadius * Math.min(scaleX, scaleY);
                   const newOuterRadius =
                     starElement.outerRadius * Math.max(scaleX, scaleY);
-  
+
                   onChange({
                     x: node.x(),
                     y: node.y(),
@@ -2094,7 +2112,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                     innerRadius: newInnerRadius,
                     outerRadius: newOuterRadius,
                   });
-  
+
                   node.scaleX(1);
                   node.scaleY(1);
                 }}
