@@ -102,7 +102,7 @@ const RightSideBar: FC = () => {
         {selectedElement?.type === "icon" && (
           <IconProperties key="icon" element={selectedElement as CanvasTextElement} />
         )}
-
+ 
       </div>
     </div>
   );
