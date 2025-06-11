@@ -2,7 +2,6 @@ import { ColorInput } from "@/components/ui/controlled-inputs/ColorInput";
 import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { updateElement } from "@/features/canvas/canvasSlice";
 import type {
-  BrandingType,
   CanvasElement,
   CanvasTextElement,
 } from "@/features/canvas/types";
