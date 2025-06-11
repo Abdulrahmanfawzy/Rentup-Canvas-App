@@ -1,4 +1,8 @@
-import { setStageSize, setAspectRatio, setElements } from "../features/canvas/canvasSlice";
+import {
+  setStageSize,
+  setAspectRatio,
+  setElements,
+} from "../features/canvas/canvasSlice";
 import { rescaleElementsForAspectRatio } from "../utils/aspectRatioRescale";
 import { useAppDispatch, useAppSelector } from "./useRedux";
 import type { AspectRatio } from "../features/canvas/types";
@@ -15,9 +19,9 @@ export function useAspectRatioChange() {
       "9:16": 9 / 16,
     };
 
-    const newWidth = 1000;
+    const newWidth = 400;
     const newHeight = Math.round(newWidth / aspectRatios[value]);
-    
+
     const scaledElements = rescaleElementsForAspectRatio(
       elements,
       { width: stageWidth, height: stageHeight },

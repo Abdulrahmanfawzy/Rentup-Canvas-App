@@ -1,4 +1,4 @@
-import { Stage, Layer, Transformer } from "react-konva";
+import { Stage, Layer, Transformer, Line, Text } from "react-konva";
 import { useRef, useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../../hooks/useRedux";
 import {
@@ -8,6 +8,7 @@ import {
   deselectAllElements,
 } from "../../features/canvas/canvasSlice";
 import { ElementRenderer } from "../ui/ElementRenderer";
+import type Konva from "konva";
 
 export function Canvas() {
   const [cursor, setCursor] = useState("default");
@@ -16,6 +17,12 @@ export function Canvas() {
   const dispatch = useAppDispatch();
   const selectedNodeRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
+  const guidesLayerRef = useRef<Konva.Layer>(null);
+  const [guides, setGuides] = useState<{
+    points: number[];
+    text?: string;
+    textPosition?: { x: number; y: number };
+  }[]>([]);
 
   // Check if any element is selected
   const isAnyElementSelected = elements.some((el) => el.selected);
@@ -132,8 +139,8 @@ export function Canvas() {
       onMouseEnter={() => {
         if (stageRef.current?.draggable()) setCursor("grab");
       }}
-      onMouseLeave={() => setCursor("default")}
-    >
+      onMouseLeave={() => setCursor("default")}>
+
       <Layer>
         {elements.map((el) => (
           <ElementRenderer
@@ -145,10 +152,41 @@ export function Canvas() {
               dispatch(updateElement({ id: el.id, updates }))
             }
             ref={el.selected ? selectedNodeRef : null}
+            stageWidth={stageWidth}
+            stageHeight={stageHeight}
+            setGuides={setGuides} // Pass setGuides to update guidelines
           />
         ))}
         {isAnyElementSelected && <Transformer ref={transformerRef} />}
       </Layer>
+
+      <Layer ref={guidesLayerRef} listening={false}>
+        {guides.map((guide, i) => (
+          <>
+            <Line
+              key={`line-${i}`}
+              points={guide.points}
+              stroke="#fb6f92"
+              strokeWidth={1}
+              dash={[4, 4]}
+            />
+            {guide.text && guide.textPosition && (
+              <Text
+                key={`text-${i}`}
+                x={guide.textPosition.x}
+                y={guide.textPosition.y}
+                text={guide.text}
+                fontSize={11}
+                fontFamily="Arial"
+                fill="black"
+                align="center"
+                verticalAlign="middle"
+              />
+            )}
+          </>
+        ))}
+      </Layer>
+
     </Stage>
   );
 }

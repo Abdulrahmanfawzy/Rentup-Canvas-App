@@ -31,9 +31,9 @@ const initialState: CanvasState = {
   elements: [],
   past: [],
   future: [],
-  stageWidth: 1000,
+  stageWidth: 600,
   stageHeight: 600,
-  aspectRatio: "9:16",
+  aspectRatio: "1:1",
 };
 
 let shapeIdCounter = 1;
@@ -88,8 +88,7 @@ const canvasSlice = createSlice({
             fontFamily: "Arial",
             stroke: undefined,
             strokeTextWidth: 0,
-            fillBrandingType: "fixed",
-            strokeBrandingType: "fixed",
+            fontBrandingType: "fixed",
             borderRadius: {
               topLeft: 4,
               topRight: 4,

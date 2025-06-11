@@ -1,9 +1,13 @@
-// store/brandingSlice.ts
 import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+
+interface FontData {
+  value: string; // Font name (Google Fonts) or file name (TTF)
+  isFile?: boolean; // Flag to indicate if it's a file upload
+}
 
 interface BrandingState {
   colors: Record<string, string>;
-  fontFamilies: Record<string, string>;
+  fontFamilies: Record<string, FontData>;
 }
 
 const initialState: BrandingState = {
@@ -12,7 +16,7 @@ const initialState: BrandingState = {
     secondary: "#00FF00",
   },
   fontFamilies: {
-    default: "Arial",
+    default: { value: "Arial", isFile: false },
   },
 };
 
@@ -31,18 +35,29 @@ const brandingSlice = createSlice({
     removeColor(state, action: PayloadAction<string>) {
       delete state.colors[action.payload];
     },
-    addFont(state, action: PayloadAction<{ key: string; value: string }>) {
-      state.fontFamilies[action.payload.key] = action.payload.value;
+    addFont(
+      state,
+      action: PayloadAction<{ key: string; value: string; isFile?: boolean }>
+    ) {
+      state.fontFamilies[action.payload.key] = {
+        value: action.payload.value,
+        isFile: action.payload.isFile || false,
+      };
     },
-    setFont(state, action: PayloadAction<{ key: string; value: string }>) {
+    setFont(
+      state,
+      action: PayloadAction<{ key: string; value: string; isFile?: boolean }>
+    ) {
       if (state.fontFamilies[action.payload.key] !== undefined) {
-        state.fontFamilies[action.payload.key] = action.payload.value;
+        state.fontFamilies[action.payload.key] = {
+          value: action.payload.value,
+          isFile: action.payload.isFile || false,
+        };
       }
     },
     removeFont(state, action: PayloadAction<string>) {
       delete state.fontFamilies[action.payload];
     },
-    // Reset branding (optional)
     resetBranding(state) {
       state.colors = {};
       state.fontFamilies = {};

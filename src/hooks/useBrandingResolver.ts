@@ -18,7 +18,8 @@ export function useBrandingResolver() {
       return font;
     }
 
-    return brandingFonts[brandingType] || font;
+    const resolved = brandingFonts[brandingType];
+    return resolved?.value || font;
   };
 
   return { resolveColor, resolveFont };

@@ -8,11 +8,28 @@ import { setElements } from "@/features/canvas/canvasSlice";
 const CanvasExportImport: FC = () => {
   const dispatch = useAppDispatch();
   const elements = useAppSelector((state: RootState) => state.canvas.elements);
+  const stageHeight = useAppSelector(
+    (state: RootState) => state.canvas.stageHeight
+  );
+  const stageWidth = useAppSelector(
+    (state: RootState) => state.canvas.stageWidth
+  );
+  const aspectRatio = useAppSelector(
+    (state: RootState) => state.canvas.aspectRatio
+  );
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Export handler
   const handleExport = () => {
-    const dataStr = JSON.stringify(elements, null, 2);
+    const exportData = {
+      elements,
+      stage: {
+        height: stageHeight,
+        width: stageWidth,
+        aspectRatio: aspectRatio,
+      },
+    };
+    const dataStr = JSON.stringify(exportData, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
 

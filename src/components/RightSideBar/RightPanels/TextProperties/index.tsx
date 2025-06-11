@@ -2,7 +2,7 @@ import { ColorInput } from "@/components/ui/controlled-inputs/ColorInput";
 import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { updateElement } from "@/features/canvas/canvasSlice";
 import type {
-  // BrandingType,
+  BrandingType,
   CanvasElement,
   CanvasTextElement,
 } from "@/features/canvas/types";
@@ -104,11 +104,22 @@ export default function TextProperties({
   // get colors from store
   const brandingColors = useAppSelector((state) => state.branding.colors);
   const [branding, setBranding] = useState<string[]>([]);
+
   // Populate branding options from brandingColors
   useEffect(() => {
     const keysArray = Object.keys(brandingColors);
     setBranding(keysArray);
   }, [brandingColors]);
+  // get fonts from store
+  const brandingFamilies = useAppSelector(
+    (state) => state.branding.fontFamilies
+  );
+  const [brandingFamily, setBrandingFamily] = useState<string[]>([]);
+
+  useEffect(() => {
+    const keysArray = Object.keys(brandingFamilies);
+    setBrandingFamily(keysArray);
+  }, [brandingFamilies]);
   /* End Branding Handlers */
   return (
     <div className="space-y-4">
@@ -335,6 +346,7 @@ export default function TextProperties({
             }
             placeholder="Create or select labels..."
           />
+
           <SelectInput
             className="col-span-full"
             label="Background Branding"
@@ -345,6 +357,17 @@ export default function TextProperties({
               })
             }
             options={branding as unknown as string[]}
+          />
+          <SelectInput
+            className="col-span-full"
+            label="Font Branding"
+            value={element.fontBrandingType ?? "fixed"}
+            onChange={(val) =>
+              update({
+                fontBrandingType: val as string,
+              })
+            }
+            options={brandingFamily}
           />
         </>
       )}

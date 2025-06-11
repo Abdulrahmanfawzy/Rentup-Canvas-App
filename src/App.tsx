@@ -15,7 +15,7 @@ function App() {
 
         {/* Canvas Area */}
         <main className="flex-1 p-4 overflow-auto flex justify-center items-center">
-          <div className="bg-white shadow-lg rounded-md">
+          <div className="bg-white shadow-lg">
             <Canvas />
           </div>
         </main>
