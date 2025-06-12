@@ -235,8 +235,8 @@ export const ElementRenderer = forwardRef<any, Props>(
           otherRect.x + otherRect.width, // Right
         ];
 
-        currentEdgesX.forEach((currentX, i) => {
-          otherEdgesX.forEach((otherX, j) => {
+        currentEdgesX.forEach((currentX) => {
+          otherEdgesX.forEach((otherX) => {
             if (Math.abs(currentX - otherX) < snapThreshold) {
               // Determine closest edges for the line
               const shapeBottom = shapeRect.y + shapeRect.height;
