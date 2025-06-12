@@ -113,6 +113,7 @@ const canvasSlice = createSlice({
             assetType: "frame",
             tags: [],
             visible: true,
+            borderRadiusSpecial: 0,
             fitMode: "fill"
           } as CanvasElement;
           break;

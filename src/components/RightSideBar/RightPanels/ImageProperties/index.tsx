@@ -1,15 +1,17 @@
 import { useAppDispatch } from "@/hooks/useRedux";
 import { updateElement } from "@/features/canvas/canvasSlice";
 import type { CanvasElement } from "@/features/canvas/types";
-// import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { useSelector } from "react-redux";
 import PositionProperties from "../CommonProperties/PositionProperties";
 import ScaleProperties from "../CommonProperties/ScaleProperties";
 import SelectInput from "@/components/ui/controlled-inputs/SelectInput";
+import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
+import { LuRadius } from "react-icons/lu";
 
 export function ImageProperties({ element }: { element: CanvasElement }) {
   const dispatch = useAppDispatch();
   const elements = useSelector((store: any) => store.canvas.elements);
+  const globalFrame = elements.find((f: CanvasElement) => f.id === element.frameId);
 
   const handleFitModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const newFitMode = e.target.value;
@@ -99,12 +101,19 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
       {/* Common Shape Properties */}
       <PositionProperties element={element} />
       <ScaleProperties element={element} />
-      {/* <TextInput
-        label="Label"
-        type="text"
-        value={""}
-        onChange={(val) => update({ label: val })}
-      /> */}
+      <TextInput
+                label={<LuRadius />}
+                type="number"
+                value={globalFrame.borderRadiusSpecial}
+                // onChange={(val) => updateElement({ borderRadius: Number(val) })}
+                onChange={(val) =>
+  dispatch(updateElement({
+    id: globalFrame.id,
+    updates: { borderRadiusSpecial: Math.max(0, Number(val)) }
+  }))
+}
+/>
+
       <SelectInput
         label="Image Fit Mode"
         value={element.fitMode || "fill"}
