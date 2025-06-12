@@ -53,6 +53,9 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
           break;
       }
 
+      console.log(frame);
+      
+
       offsetX = (frame.width - newWidth) / 2;
       offsetY = (frame.height - newHeight) / 2;
 
@@ -68,6 +71,14 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
           },
         })
       );
+
+      dispatch(
+        updateElement({
+          id: frame.id,
+          updates: { fitMode: newFitMode as CanvasElement["fitMode"] },
+        })
+      );
+
     } else {
       dispatch(
         updateElement({

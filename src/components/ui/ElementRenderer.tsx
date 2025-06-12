@@ -789,6 +789,18 @@ export const ElementRenderer = forwardRef<any, Props>(
             x_percent: toPercent(targetFrame.x + offsetX, stageWidth),
             y_percent: toPercent(targetFrame.y + offsetY, stageHeight),
           });
+
+          
+          
+          // dispatch(
+          //   updateElement({
+          //     id: targetFrame.id,
+          //     updates: {
+          //       fitMode: newFitMode,
+          //     },
+          //   })
+          // );
+          
         };
 
         if (frame) {
@@ -845,6 +857,9 @@ export const ElementRenderer = forwardRef<any, Props>(
                     x_percent: toPercent(newX + offsetX, stageWidth),
                     y_percent: toPercent(newY + offsetY, stageHeight),
                   });
+
+                  console.log(frame);
+                  
 
                   // drawGuidelines(node)
 

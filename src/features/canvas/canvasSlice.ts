@@ -113,6 +113,7 @@ const canvasSlice = createSlice({
             assetType: "frame",
             tags: [],
             visible: true,
+            fitMode: "fill"
           } as CanvasElement;
           break;
 
@@ -127,14 +128,6 @@ const canvasSlice = createSlice({
             visible: true,
           } as CanvasElement;
           break;
-
-        // case "image":
-        //   newElement = {
-        //     ...base,
-        //     type: "image",
-        //     src: "",
-        //   } as CanvasImageElement
-        //   break;
 
         case "circle":
           newElement = {
