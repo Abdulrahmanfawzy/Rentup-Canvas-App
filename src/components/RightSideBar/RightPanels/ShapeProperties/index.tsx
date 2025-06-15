@@ -78,6 +78,7 @@ export function ShapeProperties({ element }: { element: CanvasElement }) {
               label="Fill Color"
               value={element.fill}
               onChange={(val) => update({ fill: val })}
+              disabled={element.fillBrandingType !== "fixed"}
             />
             <ColorInput
               showOpacity
@@ -85,28 +86,47 @@ export function ShapeProperties({ element }: { element: CanvasElement }) {
               label="Stroke Color"
               value={element.stroke ?? "#000000"}
               onChange={(val) => update({ stroke: val })}
+              disabled={element.strokeBrandingType !== "fixed"}
             />
             <SelectInput
+              isClearable={false}
               className="col-span-full"
               label="Fill Branding"
               value={element.fillBrandingType ?? "fixed"}
-              onChange={(val) =>
-                update({
-                  fillBrandingType: val as (typeof branding)[number],
-                })
-              }
-              options={branding as unknown as string[]}
+              onChange={(val) => {
+                if (val !== "fixed") {
+                  update({
+                    fill: brandingColors[val as (typeof branding)[number]],
+                    fillBrandingType: val as (typeof branding)[number],
+                  });
+                } else {
+                  update({
+                    fill: element.fill,
+                    fillBrandingType: val as (typeof branding)[number],
+                  });
+                }
+              }}
+              options={["fixed", ...branding]}
             />
             <SelectInput
+              isClearable={false}
               className="col-span-full"
               label="Stroke Branding"
               value={element.strokeBrandingType ?? "fixed"}
-              onChange={(val) =>
-                update({
-                  strokeBrandingType: val as (typeof branding)[number],
-                })
-              }
-              options={branding as unknown as string[]}
+              onChange={(val) => {
+                if (val !== "fixed") {
+                  update({
+                    stroke: brandingColors[val as (typeof branding)[number]],
+                    strokeBrandingType: val as (typeof branding)[number],
+                  });
+                } else {
+                  update({
+                    stroke: element.stroke,
+                    strokeBrandingType: val as (typeof branding)[number],
+                  });
+                }
+              }}
+              options={["fixed", ...branding]}
             />
           </div>
 

@@ -1,10 +1,7 @@
 import { ColorInput } from "@/components/ui/controlled-inputs/ColorInput";
 import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { updateElement } from "@/features/canvas/canvasSlice";
-import type {
-  CanvasElement,
-  CanvasTextElement,
-} from "@/features/canvas/types";
+import type { CanvasElement, CanvasTextElement } from "@/features/canvas/types";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import PositionProperties from "../CommonProperties/PositionProperties";
 import ScaleProperties from "../CommonProperties/ScaleProperties";
@@ -26,9 +23,11 @@ import {
   usePostTextLabelMutation,
 } from "@/services/textLabelsApi";
 import { useEffect, useState } from "react";
-// Utility type guard for text elements
+import { useBrandingResolver } from "@/hooks/useBrandingResolver"; // Added to resolve branded fonts
+
+// Utility function to load Google Fonts dynamically
 const loadGoogleFont = (fontFamily: string) => {
-  // Check if font is already loaded
+  // Check if font is already loaded to avoid duplicates
   if (
     document.querySelector(`link[href*="${fontFamily.replace(/\s+/g, "+")}"]`)
   ) {
@@ -44,9 +43,12 @@ const loadGoogleFont = (fontFamily: string) => {
   link.rel = "stylesheet";
   document.head.appendChild(link);
 };
+
+// Utility type guard for text elements
 function isTextElement(element: CanvasElement): element is CanvasTextElement {
   return element.type === "text";
 }
+
 export default function TextProperties({
   element,
 }: {
@@ -66,13 +68,22 @@ export default function TextProperties({
     postTextLabel,
     { isLoading: postTextLabelLoading, error: postTextLabelError },
   ] = usePostTextLabelMutation();
+  const { resolveFont } = useBrandingResolver(); // Added to resolve font branding
+  const stageWidth = useAppSelector((s) => s.canvas.stageWidth);
+  const stageHeight = useAppSelector((s) => s.canvas.stageHeight);
+  const dispatch = useAppDispatch();
+
   // Normalize labelsData.results to options format
   const labelOptions = labelsData?.results
     ? labelsData.results.map((item) => ({
         id: String(item.id),
         label: item.label,
+        example: item.example
       }))
     : [];
+    console.log(labelOptions);
+    
+
   // Handle tag creation and selection
   const handleLabelsChange = async (val: string | string[]) => {
     const values = Array.isArray(val) ? val : val ? [val] : [];
@@ -93,14 +104,13 @@ export default function TextProperties({
     // Update element.tags with the final values
     update({ toi_labels: values });
   };
-  const stageWidth = useAppSelector((s) => s.canvas.stageWidth);
-  const stageHeight = useAppSelector((s) => s.canvas.stageHeight);
-  const dispatch = useAppDispatch();
+
   const update = <T extends CanvasTextElement>(updates: Partial<T>) => {
     dispatch(updateElement({ id: element.id, updates }));
   };
+
   /* Start Branding Handlers */
-  // get colors from store
+  // Get colors from store
   const brandingColors = useAppSelector((state) => state.branding.colors);
   const [branding, setBranding] = useState<string[]>([]);
 
@@ -109,7 +119,8 @@ export default function TextProperties({
     const keysArray = Object.keys(brandingColors);
     setBranding(keysArray);
   }, [brandingColors]);
-  // get fonts from store
+
+  // Get fonts from store
   const brandingFamilies = useAppSelector(
     (state) => state.branding.fontFamilies
   );
@@ -120,6 +131,7 @@ export default function TextProperties({
     setBrandingFamily(keysArray);
   }, [brandingFamilies]);
   /* End Branding Handlers */
+
   return (
     <div className="space-y-4">
       <PositionProperties element={element} />
@@ -139,10 +151,31 @@ export default function TextProperties({
               className="col-span-full"
               showOpacity
               label="Background"
-              value={element.background ?? "#000000"}
+              value={element.background as string}
               onChange={(val) => update({ background: val })}
+              disabled={element.fillBrandingType !== "fixed"}
             />
           </div>
+          <SelectInput
+            isClearable={false}
+            className="col-span-full"
+            label="Background Branding"
+            value={element.fillBrandingType as string}
+            onChange={(val) => {
+              if (val !== "fixed") {
+                update({
+                  fillBrandingType: val as (typeof branding)[number],
+                  background: brandingColors[val as (typeof branding)[number]],
+                });
+              } else {
+                update({
+                  fillBrandingType: "fixed",
+                  background: element.background,
+                });
+              }
+            }}
+            options={["fixed", ...branding]}
+          />
 
           <div className="text-sm font-medium mb-1">
             <div>Transparent</div>
@@ -207,23 +240,6 @@ export default function TextProperties({
             <FaItalic />
           </Button>
 
-          {/* <TextInput
-            label="Stroke width"
-            type="number"
-            value={(element.backgroundStrokeWidth ?? 10).toString()}
-            onChange={(val) =>
-              update<CanvasTextElement>({
-                backgroundStrokeWidth: Number.parseFloat(val),
-              })
-            }
-          />
-
-          <ColorInput
-            label="Stroke Color"
-            value={element.backgroundStroke ?? "#000000"} // backgroundStroke rect
-            onChange={(val) => update({ backgroundStroke: val })}
-          /> */}
-
           <TextInput
             label="Font Size"
             type="number"
@@ -241,27 +257,73 @@ export default function TextProperties({
               } as Partial<CanvasTextElement>)
             }
           />
+
+          {/* Updated Font Family SelectInput to handle both Google Fonts and branded fonts */}
           <SelectInput
             isClearable={false}
             isLoading={fontsLoading}
-            error={fontsError ? "Sonthing wrong happend" : null}
+            error={fontsError ? "Something went wrong" : null}
             label="Font Family"
-            value={element.fontFamily ?? "Arial"}
+            value={
+              element.fontBrandingType === "fixed"
+                ? element.fontFamily ?? "Arial"
+                : "Arial"
+            }
             onChange={(val) => {
-              // Load the Google Font dynamically
-              if (typeof val === "string") {
+              if (
+                typeof val === "string" &&
+                element.fontBrandingType === "fixed"
+              ) {
+                // Load Google Font only if fontBrandingType is "fixed"
                 loadGoogleFont(val);
+                update({
+                  fontFamily: val,
+                  fontBrandingType: "fixed",
+                } as Partial<CanvasTextElement>);
               }
-
-              // Update the element with the new font family
-              update({ fontFamily: val } as Partial<CanvasTextElement>);
             }}
             options={
-              fontsData?.items.map((font) => ({
-                label: font.family,
-                value: font.family,
-              })) ?? []
+              element.fontBrandingType === "fixed"
+                ? fontsData?.items.map((font) => ({
+                    label: font.family,
+                    value: font.family,
+                  })) ?? []
+                : brandingFamily.map((key) => ({
+                    label: key,
+                    value: key,
+                  }))
             }
+            disabled={element.fontBrandingType !== "fixed"} // Disable if using branded font
+          />
+
+          {/* Updated Font Branding SelectInput to resolve branded fonts */}
+          <SelectInput
+            className="col-span-full"
+            label="Font Branding"
+            value={element.fontBrandingType ?? "fixed"}
+            onChange={(val) => {
+              const fontBrandingType = val as string;
+              if (fontBrandingType !== "fixed") {
+                // Resolve the branded font and load it if it's a Google Font
+                const resolvedFont = resolveFont("", fontBrandingType);
+                if (resolvedFont.isFile) {
+                  loadGoogleFont(resolvedFont.value);
+                }
+                update({
+                  fontBrandingType,
+                  fontFamily: resolvedFont.value,
+                  fontVariant: resolvedFont.variant,
+                } as Partial<CanvasTextElement>);
+              } else {
+                // Revert to default font when switching to "fixed"
+                update({
+                  fontBrandingType: "fixed",
+                  fontFamily: element.fontFamily,
+                  fontVariant: element.fontVariant,
+                } as Partial<CanvasTextElement>);
+              }
+            }}
+            options={["fixed", ...brandingFamily]}
           />
 
           <TextInput
@@ -341,32 +403,9 @@ export default function TextProperties({
             isLoading={labelsLoading || postTextLabelLoading}
             onChange={handleLabelsChange}
             error={
-              errorLabels || postTextLabelError ? "somthing error happen" : null
+              errorLabels || postTextLabelError ? "Something went wrong" : null
             }
             placeholder="Create or select labels..."
-          />
-
-          <SelectInput
-            className="col-span-full"
-            label="Background Branding"
-            value={element.fillBrandingType ?? "fixed"}
-            onChange={(val) =>
-              update({
-                fillBrandingType: val as (typeof branding)[number],
-              })
-            }
-            options={branding as unknown as string[]}
-          />
-          <SelectInput
-            className="col-span-full"
-            label="Font Branding"
-            value={element.fontBrandingType ?? "fixed"}
-            onChange={(val) =>
-              update({
-                fontBrandingType: val as string,
-              })
-            }
-            options={brandingFamily}
           />
         </>
       )}

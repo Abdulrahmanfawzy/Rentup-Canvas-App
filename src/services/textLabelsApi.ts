@@ -9,6 +9,7 @@ export type LabelsData = {
   results: {
     id: number;
     label: string;
+    example: string;
   }[];
 };
 

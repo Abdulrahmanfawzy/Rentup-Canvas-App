@@ -38,34 +38,62 @@ const initialState: CanvasState = {
 
 let shapeIdCounter = 1;
 
-const createBaseElement = (id: string): Omit<CanvasElement, "type"> => ({
-  id,
-  x: 100,
-  y: 100,
-  width: 150,
-  height: 100,
-  x_percent: 0.1,
-  y_percent: 0.1,
-  width_percent: 0.15,
-  height_percent: 0.16,
-  rotation: 0,
-  selected: false,
-  fill: "#00A8E8",
-  opacity: 1,
-  fillBrandingType: "fixed",
-  strokeBrandingType: "fixed",
-});
+// const createBaseElement = (id: string): Omit<CanvasElement, "type"> => ({
+//   id,
+//   x: 100,
+//   y: 100,
+//   width: 150,
+//   height: 100,
+//   x_percent: 0.1,
+//   y_percent: 0.1,
+//   width_percent: 0.15,
+//   height_percent: 0.16,
+//   rotation: 0,
+//   selected: false,
+//   fill: "#00A8E8",
+//   opacity: 1,
+//   fillBrandingType: "fixed",
+//   strokeBrandingType: "fixed",
+// });
+
+
+const createBaseElement = (id: string): Omit<CanvasElement, "type"> => {
+  const width = 150;
+  const height = 100;
+
+  return {
+    id,
+    x: 100, 
+    y: 100,
+    width,
+    height,
+    x_percent: 0.1,
+    y_percent: 0.1,
+    width_percent: 0.15,
+    height_percent: 0.16,
+    rotation: 0,
+    selected: false,
+    fill: "#00A8E8",
+    opacity: 1,
+    fillBrandingType: "fixed",
+    strokeBrandingType: "fixed",
+  };
+};
+
+
+
 const canvasSlice = createSlice({
   name: "canvas",
   initialState,
   reducers: {
     addElement: (
-      state,
-      action: PayloadAction<
-        | { type: "icon"; iconName: string }
-        | { type: Exclude<ElementType, "icon"> }
-      >
-    ) => {
+    state,
+    action: PayloadAction<
+      | { type: "icon"; iconName: string }
+      | { type: "text"; text: string; toi_labels?: string[] }
+      | { type: Exclude<ElementType, "icon" | "text"> }
+    >
+  ) => {
       const currentId = shapeIdCounter++;
       const base = createBaseElement(String(currentId));
       let newElement: CanvasElement;
@@ -76,7 +104,8 @@ const canvasSlice = createSlice({
             ...base,
             id: `text-${currentId}`,
             fontSize_percent: 2.5,
-            text: "Edit Me Now...",
+            text: action.payload.text ?? "Edit Me Now...",
+            toi_labels: action.payload.toi_labels ?? [], // ✅ لو جت من الديسباتش خدها، لو لأ خالي
             fill: "#524C4C", // background rect
             background: "#fff",
             padding: 8,
@@ -86,6 +115,9 @@ const canvasSlice = createSlice({
             backgroundStroke: "#A3A3A3",
             backgroundStrokeWidth: 2,
             fontFamily: "Arial",
+            fontVariant: "regular", // Initialize font variant
+            fontWeight: "normal",
+            fontStyle: "normal",
             stroke: undefined,
             strokeTextWidth: 0,
             fontBrandingType: "fixed",
@@ -113,8 +145,8 @@ const canvasSlice = createSlice({
             assetType: "frame",
             tags: [],
             visible: true,
+            fitMode: "fill",
             borderRadiusSpecial: 0,
-            fitMode: "fill"
           } as CanvasElement;
           break;
 
@@ -125,7 +157,7 @@ const canvasSlice = createSlice({
             iconName: action.payload.iconName,
             width: 50,
             height: 50,
-            color: "#000000", // ✅ اللون
+            color: "#000000",
             visible: true,
           } as CanvasElement;
           break;
@@ -319,7 +351,6 @@ const canvasSlice = createSlice({
         el.selected = el.id === action.payload;
       });
     },
-    // remove selectElement
     deselectAllElements: (state) => {
       state.elements = state.elements.map((el) => ({
         ...el,
@@ -341,7 +372,6 @@ const canvasSlice = createSlice({
         state.elements[index] = { ...state.elements[index], ...updates };
       }
     },
-
     deleteSelectedElement: (state) => {
       const selectedIndex = state.elements.findIndex((el) => el.selected);
       if (selectedIndex !== -1) {
@@ -350,7 +380,6 @@ const canvasSlice = createSlice({
         state.elements.splice(selectedIndex, 1);
       }
     },
-
     undo: (state) => {
       if (state.past.length > 0) {
         const previous = state.past.pop();
@@ -360,7 +389,6 @@ const canvasSlice = createSlice({
         }
       }
     },
-
     redo: (state) => {
       if (state.future.length > 0) {
         const next = state.future.shift();
@@ -370,7 +398,6 @@ const canvasSlice = createSlice({
         }
       }
     },
-
     moveElementUp: (state, action: PayloadAction<string>) => {
       const index = state.elements.findIndex((el) => el.id === action.payload);
       if (index < state.elements.length - 1) {
@@ -382,7 +409,6 @@ const canvasSlice = createSlice({
         ];
       }
     },
-
     moveElementDown: (state, action: PayloadAction<string>) => {
       const index = state.elements.findIndex((el) => el.id === action.payload);
       if (index > 0) {
@@ -394,14 +420,12 @@ const canvasSlice = createSlice({
         ];
       }
     },
-
     toggleElementVisibility(state, action: PayloadAction<string>) {
       const element = state.elements.find((el) => el.id === action.payload);
       if (element) {
         element.visible = !(element.visible ?? true);
       }
     },
-
     setStageSize: (
       state,
       action: PayloadAction<{ width: number; height: number }>
@@ -409,17 +433,14 @@ const canvasSlice = createSlice({
       state.stageWidth = action.payload.width;
       state.stageHeight = action.payload.height;
     },
-
     setAspectRatio: (state, action: PayloadAction<AspectRatio | undefined>) => {
       state.aspectRatio = action.payload;
     },
-
     setElements: (state, action: PayloadAction<CanvasElement[]>) => {
       state.past.push(state.elements.map((el) => ({ ...el })));
       state.future = [];
       state.elements = action.payload;
     },
-
     clearCanvas: (state) => {
       state.past.push(state.elements.map((el) => ({ ...el })));
       state.future = [];

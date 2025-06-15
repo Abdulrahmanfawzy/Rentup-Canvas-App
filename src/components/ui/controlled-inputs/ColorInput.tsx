@@ -11,15 +11,16 @@ interface ColorInputProps {
   onChange: (val: string, opacity?: number) => void;
   className?: string;
   showOpacity?: boolean;
+  disabled?: boolean; // Added disabled prop
 }
 
 export function ColorInput({
   label,
   value,
-  // opacity = 100,
   onChange,
   className,
   showOpacity = false,
+  disabled = false, // Default to false
 }: ColorInputProps) {
   // تخزين لون الـ hex والشفافية داخل ال states
   const [hexValue, setHexValue] = useState("#000000");
@@ -37,6 +38,7 @@ export function ColorInput({
 
   // لما المستخدم يغير اللون (hex)
   const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return; // Prevent changes when disabled
     const newHex = e.target.value;
     setHexValue(newHex);
 
@@ -50,6 +52,7 @@ export function ColorInput({
 
   // لما المستخدم يغير الشفافية
   const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return; // Prevent changes when disabled
     const newOpacity = Number.parseInt(e.target.value);
     setOpacityValue(newOpacity);
 
@@ -63,6 +66,7 @@ export function ColorInput({
 
   // لما المستخدم يختار اللون من color picker
   const handleColorPickerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (disabled) return; // Prevent changes when disabled
     const newHex = e.target.value;
     setHexValue(newHex);
 
@@ -73,21 +77,48 @@ export function ColorInput({
     onChange(rgba, opacityValue);
   };
 
+  // Handle click on color preview
+  const handleColorPreviewClick = () => {
+    if (!disabled) {
+      colorPickerRef.current?.click();
+    }
+  };
+
   return (
-    <div className={cn("flex flex-col", className)}>
-      {label && <label className="text-sm font-medium mb-1">{label}</label>}
-      <div className="flex items-center  bg-secondary text-secondary-foreground rounded-sm  overflow-hidden">
+    <div className={cn("flex flex-col", className, { "opacity-50": disabled })}>
+      {label && (
+        <label
+          className={cn("text-sm font-medium mb-1", {
+            "text-muted-foreground": disabled,
+          })}
+        >
+          {label}
+        </label>
+      )}
+      <div
+        className={cn(
+          "flex items-center bg-secondary text-secondary-foreground rounded-sm overflow-hidden",
+          { "cursor-not-allowed": disabled }
+        )}
+      >
         <div className="flex items-center flex-1">
           <div
-            className="w-4 h-4 ml-2 rounded-sm cursor-pointer"
+            className={cn("w-4 h-4 ml-2 rounded-sm", {
+              "cursor-pointer": !disabled,
+              "cursor-not-allowed": disabled,
+            })}
             style={{ backgroundColor: hexValue }}
-            onClick={() => colorPickerRef.current?.click()}
+            onClick={handleColorPreviewClick}
           />
           <input
             type="text"
             value={hexValue.toUpperCase()}
             onChange={handleHexChange}
-            className="bg-transparent text-xs px-2 py-1 w-20 focus:outline-none"
+            className={cn(
+              "bg-transparent text-xs px-2 py-1 w-20 focus:outline-none",
+              { "cursor-not-allowed text-muted-foreground": disabled }
+            )}
+            disabled={disabled} // Native disabled attribute
           />
         </div>
         {showOpacity && (
@@ -98,9 +129,19 @@ export function ColorInput({
               max={100}
               value={opacityValue}
               onChange={handleOpacityChange}
-              className="bg-transparent text-xs w-8 text-right focus:outline-none no-spinner"
+              className={cn(
+                "bg-transparent text-xs w-8 text-right focus:outline-none no-spinner",
+                { "cursor-not-allowed text-muted-foreground": disabled }
+              )}
+              disabled={disabled} // Native disabled attribute
             />
-            <span className="text-xs ml-1">%</span>
+            <span
+              className={cn("text-xs ml-1", {
+                "text-muted-foreground": disabled,
+              })}
+            >
+              %
+            </span>
           </div>
         )}
         <input
@@ -110,6 +151,7 @@ export function ColorInput({
           className="sr-only"
           id="color-picker"
           ref={colorPickerRef}
+          disabled={disabled} // Native disabled attribute
         />
       </div>
     </div>

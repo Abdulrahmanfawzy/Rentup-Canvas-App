@@ -33,9 +33,9 @@ export function FrameProperties({ element }: { element: CanvasFrameElement }) {
   // } = useGetFramePositionQuery();
 
   const { data: typesData, isLoading: typesLoading } = useGetFrameTypesQuery();
-  
+
   console.log(typesData);
-  
+
   // Normalize typesData to options format
   const typeOptions = typesData
     ? typesData.map(([value, label]: [string, string]) => ({
@@ -168,11 +168,11 @@ export function FrameProperties({ element }: { element: CanvasFrameElement }) {
             isSearchable
             className="col-span-full"
             label="Frame-position"
-            value={String(element.position)}
+            value={String(element.frame_position_in_template)}
             options={Array.from({ length: 9 }, (_, i) => String(i + 1))}
             onChange={(val) => {
               if (typeof val === "string") {
-                update({ position: val });
+                update({ frame_position_in_template: val });
               }
             }}
             // isLoading={positionLoading}

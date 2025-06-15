@@ -13,13 +13,22 @@ export function useBrandingResolver() {
     return brandingColors[brandingType] || color;
   };
 
-  const resolveFont = (font: string, brandingType?: BrandingType): string => {
+  const resolveFont = (
+    font: string,
+    brandingType?: BrandingType
+  ): {
+    isFile?: any;
+    value: string;
+    variant?: string;
+  } => {
     if (!brandingType || brandingType === "fixed") {
-      return font;
+      return { value: font };
     }
 
     const resolved = brandingFonts[brandingType];
-    return resolved?.value || font;
+    return resolved
+      ? { value: resolved.value, variant: resolved.variant }
+      : { value: font };
   };
 
   return { resolveColor, resolveFont };

@@ -32,6 +32,10 @@ export function BrandingPanel() {
   const [fontSource, setFontSource] = useState<"google" | "upload">("google");
   const [selectedGoogleFont, setSelectedGoogleFont] = useState<string>("");
   const [uploadedFontFile, setUploadedFontFile] = useState<File | null>(null);
+  const [selectedVariant, setSelectedVariant] = useState<string>("regular");
+  const [selectedFontVariants, setSelectedFontVariants] = useState<string[]>(
+    []
+  );
 
   // Fetch Google Fonts
   const { data: googleFonts, isLoading: isFontsLoading } =
@@ -43,6 +47,28 @@ export function BrandingPanel() {
       value: font.family,
       label: font.family,
     })) || [];
+
+  // Update font variants when a Google Font is selected
+  useEffect(() => {
+    if (selectedGoogleFont && googleFonts?.items) {
+      const fontObj = googleFonts.items.find(
+        (f) => f.family === selectedGoogleFont
+      );
+      if (fontObj) {
+        const variants = fontObj.variants || [];
+        setSelectedFontVariants(variants);
+        setSelectedVariant(
+          variants.includes("regular") ? "regular" : variants[0] || ""
+        );
+      } else {
+        setSelectedFontVariants([]);
+        setSelectedVariant("");
+      }
+    } else {
+      setSelectedFontVariants([]);
+      setSelectedVariant("");
+    }
+  }, [selectedGoogleFont, googleFonts]);
 
   // Inject @font-face for uploaded fonts
   useEffect(() => {
@@ -58,7 +84,6 @@ export function BrandingPanel() {
     // Add @font-face rules for uploaded fonts
     Object.entries(fontFamilies).forEach(([key, fontData]) => {
       if (fontData.isFile) {
-        // In a real app, fontData.value should be the URL from the server
         const fontUrl = `/fonts/${fontData.value}`; // Placeholder path
         const fontFaceRule = `
           @font-face {
@@ -107,19 +132,51 @@ export function BrandingPanel() {
   const handleAddFont = async () => {
     if (!fontKey.trim()) return;
 
-    if (fontSource === "google" && selectedGoogleFont) {
-      dispatch(addFont({ key: fontKey.trim(), value: selectedGoogleFont }));
+    if (fontSource === "google" && selectedGoogleFont && selectedVariant) {
+      dispatch(
+        addFont({
+          key: fontKey.trim(),
+          value: selectedGoogleFont,
+          variant: selectedVariant,
+          isFile: false,
+        })
+      );
     } else if (fontSource === "upload" && uploadedFontFile) {
-      // In a real app, upload the file to a server and get a URL
-      // For this example, we use the file name as a placeholder
       const fontUrl = uploadedFontFile.name; // Replace with actual server URL
-      dispatch(addFont({ key: fontKey.trim(), value: fontUrl, isFile: true }));
+      dispatch(
+        addFont({
+          key: fontKey.trim(),
+          value: fontUrl,
+          isFile: true,
+        })
+      );
     }
 
     setFontKey("");
     setSelectedGoogleFont("");
     setUploadedFontFile(null);
+    setSelectedVariant("regular");
+    setSelectedFontVariants([]);
   };
+
+  // Load Google Font stylesheet with selected variant
+  useEffect(() => {
+    let link: HTMLLinkElement | null = null;
+    if (fontSource === "google" && selectedGoogleFont && selectedVariant) {
+      link = document.createElement("link");
+      link.href = `https://fonts.googleapis.com/css2?family=${selectedGoogleFont.replace(
+        " ",
+        "+"
+      )}:wght@${selectedVariant}&display=swap`;
+      link.rel = "stylesheet";
+      document.head.appendChild(link);
+    }
+    return () => {
+      if (link) {
+        document.head.removeChild(link);
+      }
+    };
+  }, [selectedGoogleFont, selectedVariant]);
 
   return (
     <div className="p-4 space-y-4">
@@ -169,7 +226,8 @@ export function BrandingPanel() {
           <div key={key} className="flex flex-col w-full shadow gap-2">
             <span className="w-full font-medium">{key}</span>
             <span>
-              {fontData.value}{" "}
+              {fontData.value}
+              {fontData.variant ? ` (${fontData.variant})` : ""}{" "}
               {fontData.isFile ? "(Uploaded)" : "(Google Font)"}
             </span>
             <Button variant="outline" onClick={() => dispatch(removeFont(key))}>
@@ -206,16 +264,31 @@ export function BrandingPanel() {
             </Button>
           </div>
           {fontSource === "google" ? (
-            <SelectInput
-              label="Select Google Font"
-              value={selectedGoogleFont}
-              onChange={(val) => setSelectedGoogleFont(val as string)}
-              options={fontOptions}
-              placeholder="Select a font..."
-              isSearchable
-              isLoading={isFontsLoading}
-              className="w-full"
-            />
+            <>
+              <SelectInput
+                label="Select Google Font"
+                value={selectedGoogleFont}
+                onChange={(val) => setSelectedGoogleFont(val as string)}
+                options={fontOptions}
+                placeholder="Select a font..."
+                isSearchable
+                isLoading={isFontsLoading}
+                className="w-full"
+              />
+              {selectedFontVariants.length > 0 && (
+                <SelectInput
+                  label="Select Font Weight"
+                  value={selectedVariant}
+                  onChange={(val) => setSelectedVariant(val as string)}
+                  options={selectedFontVariants.map((variant) => ({
+                    value: variant,
+                    label: variant === "regular" ? "Regular" : variant,
+                  }))}
+                  placeholder="Select a weight..."
+                  className="w-full"
+                />
+              )}
+            </>
           ) : (
             <FileUploadInput
               label="Upload TTF Font"
@@ -225,7 +298,15 @@ export function BrandingPanel() {
             />
           )}
         </div>
-        <Button onClick={handleAddFont} disabled={!fontKey.trim()}>
+        <Button
+          onClick={handleAddFont}
+          disabled={
+            !fontKey.trim() ||
+            (fontSource === "google" &&
+              (!selectedGoogleFont || !selectedVariant)) ||
+            (fontSource === "upload" && !uploadedFontFile)
+          }
+        >
           Add New Font Branding
         </Button>
       </div>

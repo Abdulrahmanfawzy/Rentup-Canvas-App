@@ -3,6 +3,7 @@ import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
 interface FontData {
   value: string; // Font name (Google Fonts) or file name (TTF)
   isFile?: boolean; // Flag to indicate if it's a file upload
+  variant?: string; // Font variant (e.g., "regular", "700")
 }
 
 interface BrandingState {
@@ -16,7 +17,7 @@ const initialState: BrandingState = {
     secondary: "#00FF00",
   },
   fontFamilies: {
-    default: { value: "Arial", isFile: false },
+    default: { value: "Arial", isFile: false, variant: "regular" },
   },
 };
 
@@ -37,21 +38,36 @@ const brandingSlice = createSlice({
     },
     addFont(
       state,
-      action: PayloadAction<{ key: string; value: string; isFile?: boolean }>
+      action: PayloadAction<{
+        key: string;
+        value: string;
+        isFile?: boolean;
+        variant?: string;
+      }>
     ) {
       state.fontFamilies[action.payload.key] = {
         value: action.payload.value,
         isFile: action.payload.isFile || false,
+        variant: action.payload.variant || "regular",
       };
     },
     setFont(
       state,
-      action: PayloadAction<{ key: string; value: string; isFile?: boolean }>
+      action: PayloadAction<{
+        key: string;
+        value: string;
+        isFile?: boolean;
+        variant?: string;
+      }>
     ) {
       if (state.fontFamilies[action.payload.key] !== undefined) {
         state.fontFamilies[action.payload.key] = {
           value: action.payload.value,
           isFile: action.payload.isFile || false,
+          variant:
+            action.payload.variant ||
+            state.fontFamilies[action.payload.key].variant ||
+            "regular",
         };
       }
     },

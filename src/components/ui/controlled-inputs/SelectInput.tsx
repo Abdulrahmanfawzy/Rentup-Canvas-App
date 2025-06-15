@@ -101,17 +101,26 @@ const getCustomStyles = (
       ? "hsl(var(--ring))"
       : "hsl(var(--border))",
     backgroundColor: state.isDisabled
-      ? "hsl(var(--muted) / 0.5)"
+      ? "hsl(var(--muted) / 0.3)"
       : "hsl(var(--background))",
+    color: state.isDisabled
+      ? "hsl(var(--muted-foreground) / 0.5)"
+      : "hsl(var(--foreground))",
     boxShadow: error
       ? "0 0 0 2px hsl(var(--destructive) / 0.2)"
       : state.isFocused
       ? "0 0 0 2px hsl(var(--ring) / 0.2)"
       : "none",
     "&:hover": {
-      borderColor: error ? "hsl(var(--destructive))" : "hsl(var(--border))",
+      borderColor: error
+        ? "hsl(var(--destructive))"
+        : state.isDisabled
+        ? "hsl(var(--border))"
+        : "hsl(var(--border))",
     },
     padding: isMulti ? "2px 0" : "0",
+    cursor: state.isDisabled ? "not-allowed" : "default",
+    opacity: state.isDisabled ? 0.7 : 1,
   }),
   valueContainer: (provided) => ({
     ...provided,
@@ -323,6 +332,7 @@ const SelectInput = memo(
             className={cn(
               "text-sm font-medium text-foreground",
               error && "text-destructive",
+              disabled && "text-muted-foreground opacity-70",
               labelClassName
             )}
           >
