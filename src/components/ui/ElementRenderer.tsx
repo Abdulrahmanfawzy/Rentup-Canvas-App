@@ -26,6 +26,7 @@ import type {
   WedgeShape,
   RingShape,
   CanvasElement,
+  BrandingType,
 } from "../../features/canvas/types";
 import { useSelector } from "react-redux";
 import useImage from "use-image";
@@ -164,22 +165,45 @@ export const ElementRenderer = forwardRef<any, Props>(
       (state: any) => state.branding.fontFamilies
     ); // Added to check isFile
 
-    const getBrandedFill = (element: CanvasElement) => {
-      return resolveColor(element.fill, element.fillBrandingType);
+    // const getBrandedFill = (element: CanvasElement) => {
+    //   return resolveColor(element.fill, element.fillBrandingType);
+    // };
+    // const getBrandedFillText = (element: CanvasTextElement) => {
+    //   return resolveColor(
+    //     element.background ?? "#fff",
+    //     element.fillBrandingType
+    //   );
+    // };
+
+    const isBrandingType = (value: any): value is BrandingType => {
+      return value === "fixed" || value === "dynamic";
     };
+
+    const getBrandedFill = (element: CanvasElement) => {
+      const brandingType = isBrandingType(element.fillBrandingType)
+        ? element.fillBrandingType
+        : undefined;
+
+      return resolveColor(element.fill, brandingType);
+    };
+
     const getBrandedFillText = (element: CanvasTextElement) => {
-      return resolveColor(
-        element.background ?? "#fff",
-        element.fillBrandingType
-      );
+      const brandingType = isBrandingType(element.fillBrandingType)
+        ? element.fillBrandingType
+        : undefined;
+
+      return resolveColor(element.background ?? "#fff", brandingType);
     };
 
     const getBrandedStroke = (element: CanvasElement) => {
-      return resolveColor(
-        element.stroke || "#000000",
-        element.strokeBrandingType
-      );
+      const brandingType = isBrandingType(element.strokeBrandingType)
+        ? element.strokeBrandingType
+        : undefined;
+
+      return resolveColor(element.stroke || "#000000", brandingType);
     };
+
+
 
     const drawGuidelines = (node: Konva.Node) => {
       const shapeRect = node.getClientRect();
@@ -357,10 +381,20 @@ export const ElementRenderer = forwardRef<any, Props>(
         );
 
         // Resolve the font family and variant based on fontBrandingType
-        const resolvedFont = resolveFont(
-          textElement.fontFamily || "",
-          textElement.fontBrandingType
-        );
+        // const resolvedFont = resolveFont(
+        //   textElement.fontFamily || "",
+        //   textElement.fontBrandingType
+        // );
+
+        const isBrandingType = (value: any): value is BrandingType => {
+          return value === "fixed" || value === "dynamic";
+        };
+
+        const brandingType = isBrandingType(textElement.fontBrandingType)
+          ? textElement.fontBrandingType
+          : undefined;
+
+        const resolvedFont = resolveFont(textElement.fontFamily || "", brandingType);
 
         // Load Google Font dynamically if it's not an uploaded font
         useEffect(() => {

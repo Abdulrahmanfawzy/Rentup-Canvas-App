@@ -18,6 +18,8 @@ export type ElementType =
 
 export type FitMode = "fill" | "fit" | "stretch";
 
+export type BrandingType = "fixed" | "dynamic";
+
 export interface CanvasElement {
   id: string;
   type: ElementType;
@@ -84,7 +86,7 @@ export interface CanvasTextElement extends CanvasElement {
   padding?: number;
   backgroundStroke?: string;
   backgroundStrokeWidth: number;
-  fontBrandingType?: string;
+  fontBrandingType?: BrandingType;
   toi_labels?: string[];
   fontWeight: string;
   fontStyle: string;
