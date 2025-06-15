@@ -1,7 +1,7 @@
 import { ColorInput } from "@/components/ui/controlled-inputs/ColorInput";
 import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { updateElement } from "@/features/canvas/canvasSlice";
-import type { CanvasElement, CanvasTextElement } from "@/features/canvas/types";
+import type { BrandingType, CanvasElement, CanvasTextElement } from "@/features/canvas/types";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import PositionProperties from "../CommonProperties/PositionProperties";
 import ScaleProperties from "../CommonProperties/ScaleProperties";
@@ -305,7 +305,12 @@ export default function TextProperties({
               const fontBrandingType = val as string;
               if (fontBrandingType !== "fixed") {
                 // Resolve the branded font and load it if it's a Google Font
-                const resolvedFont = resolveFont("", fontBrandingType);
+                const isBrandingType = (value: any): value is BrandingType =>
+                  value === "fixed" || value === "dynamic";
+
+                const validBrandingType = isBrandingType(fontBrandingType) ? fontBrandingType : undefined;
+
+                const resolvedFont = resolveFont("", validBrandingType);
                 if (resolvedFont.isFile) {
                   loadGoogleFont(resolvedFont.value);
                 }
