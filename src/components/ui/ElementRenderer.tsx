@@ -347,44 +347,37 @@ export const ElementRenderer = forwardRef<any, Props>(
       setGuides(guidelines);
     };
 
+    
     switch (element.type) {
+      
       case "text":
+
         const textElement = element as CanvasTextElement;
-        const refText = useRef<KonvaText>(null);
+        const refText = useRef<Konva.Text>(null);
+        const refGroup = useRef<Konva.Group>(null); // Reference for the group
         const [bgSize, setBgSize] = useState({ width: 0, height: 0 });
         const trRef = useRef<Konva.Transformer>(null);
         const [isEditing, setIsEditing] = useState(false);
         const [editableText, setEditableText] = useState(textElement.text);
         const isSelected = useSelector(
           (state: RootState) =>
-            state.canvas.elements.find((el) => el.id === textElement.id)
-              ?.selected
+            state.canvas.elements.find((el) => el.id === textElement.id)?.selected
         );
         const textAlign = useSelector(
           (state: any) =>
-            state.canvas.elements.find((el: any) => el.id === textElement.id)
-              ?.align || "left"
+            state.canvas.elements.find((el: any) => el.id === textElement.id)?.align ||
+            "left"
         );
         const fontWeight = useSelector(
-          (state: {
-            canvas: { elements: { id: string; fontWeight?: string }[] };
-          }) =>
-            state.canvas.elements.find((el) => el.id === textElement.id)
-              ?.fontWeight || "normal"
+          (state: { canvas: { elements: { id: string; fontWeight?: string }[] } }) =>
+            state.canvas.elements.find((el) => el.id === textElement.id)?.fontWeight ||
+            "normal"
         );
         const fontStyle = useSelector(
-          (state: {
-            canvas: { elements: { id: string; fontStyle?: string }[] };
-          }) =>
-            state.canvas.elements.find((el) => el.id === textElement.id)
-              ?.fontStyle || "normal"
+          (state: { canvas: { elements: { id: string; fontStyle?: string }[] } }) =>
+            state.canvas.elements.find((el) => el.id === textElement.id)?.fontStyle ||
+            "normal"
         );
-
-        // Resolve the font family and variant based on fontBrandingType
-        // const resolvedFont = resolveFont(
-        //   textElement.fontFamily || "",
-        //   textElement.fontBrandingType
-        // );
 
         const isBrandingType = (value: any): value is BrandingType => {
           return value === "fixed" || value === "dynamic";
@@ -398,18 +391,13 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         // Load Google Font dynamically if it's not an uploaded font
         useEffect(() => {
-          const fontData = brandingFamilies[
-            textElement.fontBrandingType || ""
-          ] || { isFile: false };
+          const fontData = brandingFamilies[textElement.fontBrandingType || ""] || {
+            isFile: false,
+          };
           if (!fontData.isFile && resolvedFont.value) {
             loadGoogleFont(resolvedFont.value);
           }
-          // Note: Uploaded fonts are handled by @font-face rules in BrandingPanel
-        }, [
-          resolvedFont.value,
-          textElement.fontBrandingType,
-          brandingFamilies,
-        ]);
+        }, [resolvedFont.value, textElement.fontBrandingType, brandingFamilies]);
 
         const borderRadius = textElement.borderRadius || {};
         const textCornerRadius = [
@@ -419,6 +407,7 @@ export const ElementRenderer = forwardRef<any, Props>(
           borderRadius.bottomLeft || 0,
         ];
 
+        // Update text size and background
         useEffect(() => {
           if (refText.current) {
             const fontStyleFinal =
@@ -429,7 +418,6 @@ export const ElementRenderer = forwardRef<any, Props>(
                 : fontStyle;
 
             refText.current.fontStyle(fontStyleFinal);
-
             refText.current.width(textElement.width || 100);
             refText.current._setTextData();
             const box = refText.current.getClientRect({ skipTransform: true });
@@ -453,7 +441,7 @@ export const ElementRenderer = forwardRef<any, Props>(
           textElement?.text,
           textElement?.fontSize,
           textElement?.fontFamily,
-          textElement?.fontBrandingType, // Added dependency for branding
+          textElement?.fontBrandingType,
           textElement?.padding,
           textAlign,
           fontWeight,
@@ -461,9 +449,10 @@ export const ElementRenderer = forwardRef<any, Props>(
           dispatch,
         ]);
 
+        // Attach transformer to group when selected
         useEffect(() => {
-          if (isSelected && refText.current && trRef.current && !isEditing) {
-            trRef.current.nodes([refText.current]);
+          if (isSelected && refGroup.current && trRef.current && !isEditing) {
+            trRef.current.nodes([refGroup.current]);
             trRef.current.getLayer()?.batchDraw();
           }
         }, [isSelected, isEditing]);
@@ -476,9 +465,7 @@ export const ElementRenderer = forwardRef<any, Props>(
           setIsEditing(true);
         };
 
-        const handleTextChange = (
-          e: React.ChangeEvent<HTMLTextAreaElement>
-        ) => {
+        const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
           setEditableText(e.target.value);
           if (refText.current) {
             refText.current.text(e.target.value);
@@ -491,7 +478,6 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         const handleTextBlur = () => {
           setIsEditing(false);
-
           if (textElement.id !== undefined) {
             dispatch(
               updateElement({
@@ -507,9 +493,7 @@ export const ElementRenderer = forwardRef<any, Props>(
           }
         };
 
-        const handleKeyPress = (
-          e: React.KeyboardEvent<HTMLTextAreaElement>
-        ) => {
+        const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
           if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             setIsEditing(false);
@@ -531,181 +515,179 @@ export const ElementRenderer = forwardRef<any, Props>(
 
         return (
           <>
-            {textElement.background && (element.visible ?? true) && (
-              <Rect
-                x={textElement.x - (textElement.padding || 0)}
-                y={textElement.y - (textElement.padding || 0)}
-                width={bgSize.width + (textElement.padding || 0) * 2}
-                height={bgSize.height + (textElement.padding || 0) * 2}
-                fill={getBrandedFillText(textElement)}
-                opacity={textElement.opacity}
-                rotation={textElement.rotation}
-                cornerRadius={textCornerRadius}
-              />
-            )}
             {(element.visible ?? true) && (
-              <>
+              <Group
+                ref={refGroup}
+                x={textElement.x}
+                y={textElement.y}
+                draggable
+                rotation={textElement.rotation}
+                onClick={handleSelect}
+                onDblClick={handleDoubleClick}
+                onDragMove={(e) => {
+                  const node = e.target as Konva.Group;
+                  const { newX, newY } = calculateSnappingPosition(
+                    node,
+                    elements,
+                    element,
+                    snapThreshold,
+                    bgSize.width / 2,
+                    bgSize.height / 2
+                  );
+
+                  dispatch(
+                    updateElement({
+                      id: textElement.id,
+                      updates: {
+                        x: newX,
+                        y: newY,
+                        width_percent: toPercent(bgSize.width, stageWidth),
+                        height_percent: toPercent(bgSize.height, stageHeight),
+                        x_percent: toPercent(newX, stageWidth),
+                        y_percent: toPercent(newY, stageHeight),
+                        fontSize_percent: toPercentFontSize(
+                          Number(textElement.fontSize),
+                          stageWidth,
+                          stageHeight
+                        ),
+                      },
+                    })
+                  );
+                  drawGuidelines(node);
+                }}
+                onDragEnd={() => {
+                  setGuides([]);
+                }}
+                onTransform={(e) => {
+                  const node = refText.current;
+                  const group = refGroup.current;
+                  if (!node || !group) return;
+
+                  const newWidth = Math.max(30, node.width() * group.scaleX());
+                  node.width(newWidth);
+                  group.scaleX(1);
+                  group.scaleY(1);
+                  node._setTextData();
+                  const box = node.getClientRect({ skipTransform: true });
+                  setBgSize({ width: newWidth, height: box.height });
+                }}
+                onTransformEnd={() => {
+                  const node = refText.current;
+                  const group = refGroup.current;
+                  if (!node || !group) return;
+
+                  const newWidth = Math.max(30, node.width());
+                  node.width(newWidth);
+                  node._setTextData();
+                  const box = node.getClientRect({ skipTransform: true });
+                  const newHeight = box.height;
+
+                  setBgSize({ width: newWidth, height: newHeight });
+
+                  dispatch(
+                    updateElement({
+                      id: textElement.id,
+                      updates: {
+                        x: group.x(),
+                        y: group.y(),
+                        width: newWidth,
+                        height: newHeight,
+                        align: textAlign,
+                        width_percent: toPercent(newWidth, stageWidth),
+                        height_percent: toPercent(newHeight, stageHeight),
+                        x_percent: toPercent(group.x(), stageWidth),
+                        y_percent: toPercent(group.y(), stageHeight),
+                        fontSize_percent: toPercentFontSize(
+                          Number(textElement.fontSize),
+                          stageWidth,
+                          stageHeight
+                        ),
+                      },
+                    })
+                  );
+
+                  group.scaleX(1);
+                  group.scaleY(1);
+                }}
+              >
+                {textElement.background && (
+                  <Rect
+                    x={-(textElement.padding || 0)}
+                    y={-(textElement.padding || 0)}
+                    width={bgSize.width + (textElement.padding || 0) * 2}
+                    height={bgSize.height + (textElement.padding || 0) * 2}
+                    fill={getBrandedFillText(textElement)}
+                    opacity={textElement.opacity}
+                    cornerRadius={textCornerRadius}
+                  />
+                )}
                 <Text
                   ref={refText}
-                  x={textElement.x}
-                  y={textElement.y}
+                  x={0}
+                  y={0}
                   text={editableText}
                   fill={textElement.fill || "#000"}
                   stroke={textElement.stroke}
                   padding={textElement.padding}
                   fontSize={textElement.fontSize}
-                  fontFamily={resolvedFont.value} // Use resolved font family
-                  fontStyle={resolvedFont.variant || "normal"} // Use resolved font variant
+                  fontFamily={resolvedFont.value}
+                  fontStyle={resolvedFont.variant || "normal"}
                   opacity={textElement.opacity}
                   verticalAlign="middle"
                   align={textAlign}
-                  draggable
                   width={textElement.width || 100}
                   wrap="word"
-                  onClick={handleSelect}
-                  onDblClick={handleDoubleClick}
-                  onDragMove={(e) => {
-                    const node = e.target as Konva.Text;
-                    const { newX, newY } = calculateSnappingPosition(
-                      node,
-                      elements,
-                      element,
-                      snapThreshold,
-                      textElement.width / 2,
-                      textElement.height / 2
-                    );
-
-                    dispatch(
-                      updateElement({
-                        id: textElement.id,
-                        updates: {
-                          x: newX,
-                          y: newY,
-                          width_percent: toPercent(element.width, stageWidth),
-                          height_percent: toPercent(
-                            element.height,
-                            stageHeight
-                          ),
-                          x_percent: toPercent(e.target.x(), stageWidth),
-                          y_percent: toPercent(e.target.y(), stageHeight),
-                          fontSize_percent: toPercentFontSize(
-                            Number(element.fontSize),
-                            stageWidth,
-                            stageHeight
-                          ),
-                        },
-                      })
-                    );
-                    drawGuidelines(node);
-                  }}
-                  onDragEnd={() => {
-                    setGuides([]);
-                  }}
-                  onTransform={(e) => {
-                    const node = refText.current;
-                    const newWidth = Math.max(
-                      30,
-                      e.target.width() * e.target.scaleX()
-                    );
-
-                    if (node) {
-                      node.width(newWidth);
-                      node.scaleX(1);
-                      node.scaleY(1);
-                      node._setTextData();
-                      const box = node.getClientRect({ skipTransform: true });
-                      setBgSize({ width: newWidth, height: box.height });
-                    }
-                  }}
-                  onTransformEnd={() => {
-                    const node = refText.current;
-                    if (!node) return;
-                    const newWidth = Math.max(30, node.width());
-                    node.width(newWidth);
-                    node._setTextData();
-                    const box = node.getClientRect({ skipTransform: true });
-                    const newHeight = box.height;
-
-                    setBgSize({ width: newWidth, height: newHeight });
-
-                    dispatch(
-                      updateElement({
-                        id: textElement.id,
-                        updates: {
-                          x: node.x(),
-                          y: node.y(),
-                          width: newWidth,
-                          height: newHeight,
-                          align: textAlign,
-                          width_percent: toPercent(newWidth, stageWidth),
-                          height_percent: toPercent(newHeight, stageHeight),
-                          x_percent: toPercent(node.x(), stageWidth),
-                          y_percent: toPercent(node.y(), stageHeight),
-                          fontSize_percent: toPercentFontSize(
-                            Number(element.fontSize),
-                            stageWidth,
-                            stageHeight
-                          ),
-                        },
-                      })
-                    );
-
-                    node.scaleX(1);
-                    node.scaleY(1);
-                  }}
                 />
-                {isSelected && !isEditing && (
-                  <Transformer
-                    ref={trRef}
-                    rotateEnabled={false}
-                    enabledAnchors={["middle-left", "middle-right"]}
-                    boundBoxFunc={(oldBox, newBox) => {
-                      if (newBox.width < 30) {
-                        return oldBox; // Prevent width from going too small
-                      }
-                      return newBox;
-                    }}
-                    onClick={(e) => (e.cancelBubble = true)}
-                  />
-                )}
-                {isEditing && (
-                  <Html>
-                    <textarea
-                      style={{
-                        position: "absolute",
-                        top: textElement.y,
-                        left: textElement.x,
-                        width: textElement.width || 100,
-                        height: bgSize.height,
-                        fontSize: textElement.fontSize,
-                        fontFamily: resolvedFont.value || "Arial", // Use resolved font
-                        fontWeight: /bold|700|800|900/.test(
-                          resolvedFont.variant || ""
-                        )
-                          ? "bold"
-                          : "normal", // Map variant to fontWeight
-                        fontStyle: /italic/.test(resolvedFont.variant || "")
-                          ? "italic"
-                          : "normal", // Map variant to fontStyle
-                        padding: textElement.padding || 0,
-                        color: textElement.fill,
-                        background: "white",
-                        border: "1px dashed #ccc",
-                        resize: "none",
-                        outline: "none",
-                        overflow: "hidden",
-                        lineHeight: "1",
-                        textAlign: textAlign,
-                      }}
-                      value={editableText}
-                      onChange={handleTextChange}
-                      onBlur={handleTextBlur}
-                      onKeyPress={handleKeyPress}
-                      autoFocus
-                    />
-                  </Html>
-                )}
-              </>
+              </Group>
+            )}
+            {isSelected && !isEditing && (
+              <Transformer
+                ref={trRef}
+                rotateEnabled={false}
+                enabledAnchors={["middle-left", "middle-right"]}
+                boundBoxFunc={(oldBox, newBox) => {
+                  if (newBox.width < 30) {
+                    return oldBox;
+                  }
+                  return newBox;
+                }}
+                onClick={(e) => (e.cancelBubble = true)}
+              />
+            )}
+            {isEditing && (
+              <Html>
+                <textarea
+                  style={{
+                    position: "absolute",
+                    top: textElement.y,
+                    left: textElement.x,
+                    width: textElement.width || 100,
+                    height: bgSize.height,
+                    fontSize: textElement.fontSize,
+                    fontFamily: resolvedFont.value || "Arial",
+                    fontWeight: /bold|700|800|900/.test(resolvedFont.variant || "")
+                      ? "bold"
+                      : "normal",
+                    fontStyle: /italic/.test(resolvedFont.variant || "")
+                      ? "italic"
+                      : "normal",
+                    padding: textElement.padding || 0,
+                    color: textElement.fill,
+                    background: "white",
+                    border: "1px dashed #ccc",
+                    resize: "none",
+                    outline: "none",
+                    overflow: "hidden",
+                    lineHeight: "1",
+                    textAlign: textAlign,
+                  }}
+                  value={editableText}
+                  onChange={handleTextChange}
+                  onBlur={handleTextBlur}
+                  onKeyPress={handleKeyPress}
+                  autoFocus
+                />
+              </Html>
             )}
           </>
         );
