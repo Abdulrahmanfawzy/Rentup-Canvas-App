@@ -56,14 +56,13 @@ let shapeIdCounter = 1;
 //   strokeBrandingType: "fixed",
 // });
 
-
 const createBaseElement = (id: string): Omit<CanvasElement, "type"> => {
   const width = 150;
   const height = 100;
 
   return {
     id,
-    x: 100, 
+    x: 100,
     y: 100,
     width,
     height,
@@ -80,20 +79,18 @@ const createBaseElement = (id: string): Omit<CanvasElement, "type"> => {
   };
 };
 
-
-
 const canvasSlice = createSlice({
   name: "canvas",
   initialState,
   reducers: {
     addElement: (
-    state,
-    action: PayloadAction<
-      | { type: "icon"; iconName: string }
-      | { type: "text"; text: string; toi_labels?: string[] }
-      | { type: Exclude<ElementType, "icon" | "text"> }
-    >
-  ) => {
+      state,
+      action: PayloadAction<
+        | { type: "icon"; iconName: string }
+        | { type: "text"; text: string; toi_labels?: string[] }
+        | { type: Exclude<ElementType, "icon" | "text"> }
+      >
+    ) => {
       const currentId = shapeIdCounter++;
       const base = createBaseElement(String(currentId));
       let newElement: CanvasElement;
@@ -113,7 +110,7 @@ const canvasSlice = createSlice({
             opacity: 1,
             type: "text",
             backgroundStroke: "#A3A3A3",
-            backgroundStrokeWidth: 2,
+            backgroundStrokeWidth: 0,
             fontFamily: "Arial",
             fontVariant: "regular", // Initialize font variant
             fontWeight: "normal",

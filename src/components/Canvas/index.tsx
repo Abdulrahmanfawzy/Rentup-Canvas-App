@@ -1,5 +1,5 @@
 import { Stage, Layer, Transformer, Line, Text } from "react-konva";
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type RefObject } from "react";
 import { useAppSelector, useAppDispatch } from "../../hooks/useRedux";
 import {
   deleteSelectedElement,
@@ -9,8 +9,10 @@ import {
 } from "../../features/canvas/canvasSlice";
 import { ElementRenderer } from "../ui/ElementRenderer";
 import type Konva from "konva";
-
-export function Canvas() {
+interface CanvasProps {
+  stageRef: RefObject<Konva.Stage>;
+}
+export function Canvas({ stageRef }: CanvasProps) {
   const [cursor, setCursor] = useState("default");
   const elements = useAppSelector((state) => state.canvas.elements);
   const { stageWidth, stageHeight } = useAppSelector((state) => state.canvas);
@@ -18,11 +20,13 @@ export function Canvas() {
   const selectedNodeRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
   const guidesLayerRef = useRef<Konva.Layer>(null);
-  const [guides, setGuides] = useState<{
-    points: number[];
-    text?: string;
-    textPosition?: { x: number; y: number };
-  }[]>([]);
+  const [guides, setGuides] = useState<
+    {
+      points: number[];
+      text?: string;
+      textPosition?: { x: number; y: number };
+    }[]
+  >([]);
 
   // Check if any element is selected
   const isAnyElementSelected = elements.some((el) => el.selected);
@@ -59,7 +63,6 @@ export function Canvas() {
     }
   };
   /* handle zooming */
-  const stageRef = useRef<any>(null);
 
   const handleWheel = (e: any) => {
     e.evt.preventDefault();
@@ -67,6 +70,7 @@ export function Canvas() {
     const stage = stageRef.current;
     const oldScale = stage.scaleX();
     const pointer = stage.getPointerPosition();
+    if (!pointer) return;
 
     const mousePointTo = {
       x: (pointer.x - stage.x()) / oldScale,
@@ -139,8 +143,8 @@ export function Canvas() {
       onMouseEnter={() => {
         if (stageRef.current?.draggable()) setCursor("grab");
       }}
-      onMouseLeave={() => setCursor("default")}>
-
+      onMouseLeave={() => setCursor("default")}
+    >
       <Layer>
         {elements.map((el) => (
           <ElementRenderer
@@ -186,7 +190,6 @@ export function Canvas() {
           </>
         ))}
       </Layer>
-
     </Stage>
   );
 }
