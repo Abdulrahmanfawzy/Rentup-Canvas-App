@@ -92,7 +92,7 @@ export const CanvasProvider: FC<{
     }
   };
 
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImport = () => {
     // Import logic moved to CanvasExportImport for consistency
     // This is just a placeholder to satisfy the interface
   };
