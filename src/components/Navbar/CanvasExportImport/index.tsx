@@ -3,7 +3,11 @@ import { FaFileImport, FaSave } from "react-icons/fa";
 import { Button } from "../../ui/Button";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import type { RootState } from "@/app/store";
-import { setElements } from "@/features/canvas/canvasSlice";
+import {
+  setElements,
+  setStageSize,
+  setAspectRatio,
+} from "@/features/canvas/canvasSlice";
 
 const CanvasExportImport: FC = () => {
   const dispatch = useAppDispatch();
@@ -50,9 +54,25 @@ const CanvasExportImport: FC = () => {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        const importedElements = JSON.parse(reader.result as string);
-        if (Array.isArray(importedElements)) {
-          dispatch(setElements(importedElements));
+        const importedData = JSON.parse(reader.result as string);
+
+        if (
+          importedData &&
+          Array.isArray(importedData.elements) &&
+          importedData.stage &&
+          importedData.stage.height &&
+          importedData.stage.width &&
+          importedData.stage.aspectRatio
+        ) {
+          dispatch(setElements(importedData.elements));
+          dispatch(
+            setStageSize({
+              height: importedData.stage.height,
+              width: importedData.stage.width,
+            })
+          );
+          dispatch(setAspectRatio(importedData.stage.aspectRatio));
+          // dispatch(setStageDimensions(importedData.stage));
         } else {
           alert("Invalid file format.");
         }
