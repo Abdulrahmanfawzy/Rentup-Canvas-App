@@ -53,7 +53,7 @@ interface Props {
   stageHeight: number;
   setGuides: (guides: GuideLineType[]) => void;
 }
-type KonvaText = InstanceType<typeof Konva.Text>;
+
 interface RootState {
   canvas: {
     elements: CanvasElement[];
@@ -558,7 +558,7 @@ export const ElementRenderer = forwardRef<any, Props>(
                 onDragEnd={() => {
                   setGuides([]);
                 }}
-                onTransform={(e) => {
+                onTransform={() => {
                   const node = refText.current;
                   const group = refGroup.current;
                   if (!node || !group) return;
