@@ -31,8 +31,8 @@ const initialState: CanvasState = {
   elements: [],
   past: [],
   future: [],
-  stageWidth: 600,
-  stageHeight: 600,
+  stageWidth: 1000,
+  stageHeight: 1000,
   aspectRatio: "1:1",
 };
 
