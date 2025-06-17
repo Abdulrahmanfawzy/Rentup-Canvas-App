@@ -20,7 +20,12 @@ import { useCanvas } from "@/context/CanvasContext";
 
 const CanvasExportImport: FC = () => {
   const dispatch = useAppDispatch();
-  const { handleExportJSON, handleExportPNG, handleExportSVG } = useCanvas();
+  const {
+    handleExportJSON,
+    handleExportPNG,
+    handleExportSVG,
+    handleExportSummary,
+  } = useCanvas();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Import handler
@@ -87,11 +92,15 @@ const CanvasExportImport: FC = () => {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem onClick={handleExportPNG}>PNG</DropdownMenuItem>
-              <DropdownMenuItem onClick={handleExportSVG}>SVG</DropdownMenuItem>
               <DropdownMenuItem onClick={handleExportJSON}>
                 JSON File
               </DropdownMenuItem>
-              <DropdownMenuItem disabled>Summary File</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportSummary}>
+                Summary File
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportSVG} disabled>
+                SVG
+              </DropdownMenuItem>
             </DropdownMenuGroup>
           </DropdownMenuContent>
         </DropdownMenu>

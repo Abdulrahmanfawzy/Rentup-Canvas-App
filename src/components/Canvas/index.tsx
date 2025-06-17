@@ -158,6 +158,7 @@ export function Canvas({ stageRef }: CanvasProps) {
             ref={el.selected ? selectedNodeRef : null}
             stageWidth={stageWidth}
             stageHeight={stageHeight}
+            stageRef={stageRef}         // ✅ ضيف دي
             setGuides={setGuides} // Pass setGuides to update guidelines
           />
         ))}

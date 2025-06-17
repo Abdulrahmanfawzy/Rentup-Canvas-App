@@ -7,6 +7,7 @@ interface CanvasContextType {
   handleExportJSON: () => void;
   handleExportPNG: () => void;
   handleExportSVG: () => void;
+  handleExportSummary: () => void;
   handleImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
@@ -97,8 +98,66 @@ export const CanvasProvider: FC<{
     // This is just a placeholder to satisfy the interface
   };
 
+  const handleExportSummary = () => {
+    const frames: {
+      assetType: string | null;
+      tags: string[];
+      frame_position_in_template: number | null;
+    }[] = [];
+
+    const texts: {
+      id: string;
+      toi_labels: string[];
+    }[] = [];
+
+    elements.forEach((el) => {
+      if (el.type === "frame") {
+        const frameEl = el as {
+          assetType?: string;
+          tags?: string[];
+          frame_position_in_template?: number;
+        };
+
+        frames.push({
+          assetType: frameEl.assetType || null,
+          tags: frameEl.tags || [],
+          frame_position_in_template:
+            frameEl.frame_position_in_template ?? null,
+        });
+      } else if (el.type === "text") {
+        const textEl = el as {
+          id: string;
+          toi_labels?: string[];
+        };
+
+        texts.push({
+          id: textEl.id,
+          toi_labels: textEl.toi_labels || [],
+        });
+      }
+    });
+
+    const summary = {
+      frames,
+      texts,
+    };
+
+    const dataStr = JSON.stringify(summary, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "canvas-summary.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const value: CanvasContextType = {
     stageRef,
+    handleExportSummary,
     handleExportJSON,
     handleExportPNG,
     handleExportSVG,
