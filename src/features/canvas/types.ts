@@ -64,6 +64,9 @@ export interface CanvasElement {
   fontSize_percent?: number;
   visible?: boolean;
   borderRadiusSpecial?: number;
+
+  fontWeight?:string
+  fontStyle?:string
 }
 
 export interface CanvasFrameElement extends CanvasElement {
