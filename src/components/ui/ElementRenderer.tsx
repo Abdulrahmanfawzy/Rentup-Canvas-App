@@ -212,8 +212,6 @@ const calculateSnappingPosition = (
   return { newX, newY };
 };
 
-
-
 const loadGoogleFont = (fontFamily: string) => {
   // Check if font is already loaded to avoid duplicates
   if (
@@ -286,15 +284,17 @@ export const ElementRenderer = forwardRef<any, Props>(
 
       const newGuides: GuideLine[] = [];
 
-      // ✅ خطوط بين العناصر (اللي عملناها قبل كده)
-      elements.forEach((el:CanvasElement) => {
+      elements.forEach((el: CanvasElement) => {
         if (el.id === element.id) return;
 
         const otherNode = stageRef.current?.findOne(`#${el.id}`);
         if (!otherNode) return;
 
         const otherBox = otherNode.getClientRect();
+        const otherCenterX = otherBox.x + otherBox.width / 2;
+        const otherCenterY = otherBox.y + otherBox.height / 2;
 
+        // Left
         const leftDiff = Math.abs(nodeBox.x - otherBox.x);
         if (leftDiff < threshold) {
           newGuides.push({
@@ -304,9 +304,8 @@ export const ElementRenderer = forwardRef<any, Props>(
           });
         }
 
-        const rightDiff = Math.abs(
-          nodeBox.x + nodeBox.width - (otherBox.x + otherBox.width)
-        );
+        // Right
+        const rightDiff = Math.abs(nodeBox.x + nodeBox.width - (otherBox.x + otherBox.width));
         if (rightDiff < threshold) {
           const x = otherBox.x + otherBox.width;
           newGuides.push({
@@ -316,6 +315,7 @@ export const ElementRenderer = forwardRef<any, Props>(
           });
         }
 
+        // Top
         const topDiff = Math.abs(nodeBox.y - otherBox.y);
         if (topDiff < threshold) {
           newGuides.push({
@@ -325,9 +325,8 @@ export const ElementRenderer = forwardRef<any, Props>(
           });
         }
 
-        const bottomDiff = Math.abs(
-          nodeBox.y + nodeBox.height - (otherBox.y + otherBox.height)
-        );
+        // Bottom
+        const bottomDiff = Math.abs(nodeBox.y + nodeBox.height - (otherBox.y + otherBox.height));
         if (bottomDiff < threshold) {
           const y = otherBox.y + otherBox.height;
           newGuides.push({
@@ -336,11 +335,138 @@ export const ElementRenderer = forwardRef<any, Props>(
             textPosition: { x: 10, y: y + 5 },
           });
         }
+
+        // Top to Bottom
+        const topToBottomDiff = Math.abs(nodeBox.y - (otherBox.y + otherBox.height));
+        if (topToBottomDiff < threshold) {
+          const y = otherBox.y + otherBox.height;
+          newGuides.push({
+            points: [0, y, stageWidth, y],
+            text: `${topToBottomDiff.toFixed(0)}px`,
+            textPosition: { x: 10, y: y + 5 },
+          });
+        }
+
+        // Bottom to Top
+        const bottomToTopDiff = Math.abs(nodeBox.y + nodeBox.height - otherBox.y);
+        if (bottomToTopDiff < threshold) {
+          const y = otherBox.y;
+          newGuides.push({
+            points: [0, y, stageWidth, y],
+            text: `${bottomToTopDiff.toFixed(0)}px`,
+            textPosition: { x: 10, y: y + 5 },
+          });
+        }
+
+        // Left to Right
+        const leftToRightDiff = Math.abs(nodeBox.x - (otherBox.x + otherBox.width));
+        if (leftToRightDiff < threshold) {
+          const x = otherBox.x + otherBox.width;
+          newGuides.push({
+            points: [x, 0, x, stageHeight],
+            text: `${leftToRightDiff.toFixed(0)}px`,
+            textPosition: { x: x + 5, y: nodeBox.y + 10 },
+          });
+        }
+
+        // Right to Left
+        const rightToLeftDiff = Math.abs(nodeBox.x + nodeBox.width - otherBox.x);
+        if (rightToLeftDiff < threshold) {
+          const x = otherBox.x;
+          newGuides.push({
+            points: [x, 0, x, stageHeight],
+            text: `${rightToLeftDiff.toFixed(0)}px`,
+            textPosition: { x: x + 5, y: nodeBox.y + 10 },
+          });
+        }
+
+        // Center X to Center X
+        const centerToCenterXDiff = Math.abs(nodeCenterX - otherCenterX);
+        if (centerToCenterXDiff < threshold) {
+          newGuides.push({
+            points: [otherCenterX, 0, otherCenterX, stageHeight],
+            text: `${centerToCenterXDiff.toFixed(0)}px`,
+            textPosition: { x: otherCenterX + 5, y: nodeBox.y + 10 },
+          });
+        }
+
+        // Center Y to Center Y
+        const centerToCenterYDiff = Math.abs(nodeCenterY - otherCenterY);
+        if (centerToCenterYDiff < threshold) {
+          newGuides.push({
+            points: [0, otherCenterY, stageWidth, otherCenterY],
+            text: `${centerToCenterYDiff.toFixed(0)}px`,
+            textPosition: { x: nodeBox.x + 10, y: otherCenterY + 5 },
+          });
+        }
+
+        // Center X to Left
+        const centerXToLeftDiff = Math.abs(nodeCenterX - otherBox.x);
+        if (centerXToLeftDiff < threshold) {
+          newGuides.push({
+            points: [otherBox.x, 0, otherBox.x, stageHeight],
+            text: `${centerXToLeftDiff.toFixed(0)}px`,
+            textPosition: { x: otherBox.x + 5, y: nodeBox.y + 10 },
+          });
+        }
+
+        // Center X to Right
+        const centerXToRightDiff = Math.abs(nodeCenterX - (otherBox.x + otherBox.width));
+        if (centerXToRightDiff < threshold) {
+          const x = otherBox.x + otherBox.width;
+          newGuides.push({
+            points: [x, 0, x, stageHeight],
+            text: `${centerXToRightDiff.toFixed(0)}px`,
+            textPosition: { x: x + 5, y: nodeBox.y + 10 },
+          });
+        }
+
+        // Center Y to Top
+        const centerYToTopDiff = Math.abs(nodeCenterY - otherBox.y);
+        if (centerYToTopDiff < threshold) {
+          newGuides.push({
+            points: [0, otherBox.y, stageWidth, otherBox.y],
+            text: `${centerYToTopDiff.toFixed(0)}px`,
+            textPosition: { x: nodeBox.x + 10, y: otherBox.y + 5 },
+          });
+        }
+
+        // Center Y to Bottom
+        const centerYToBottomDiff = Math.abs(nodeCenterY - (otherBox.y + otherBox.height));
+        if (centerYToBottomDiff < threshold) {
+          const y = otherBox.y + otherBox.height;
+          newGuides.push({
+            points: [0, y, stageWidth, y],
+            text: `${centerYToBottomDiff.toFixed(0)}px`,
+            textPosition: { x: nodeBox.x + 10, y: y + 5 },
+          });
+        }
+
+        // Top inside center of another
+        const topInCenterDiff = Math.abs(otherCenterY - nodeBox.y);
+        if (topInCenterDiff < threshold) {
+          newGuides.push({
+            points: [0, nodeBox.y, stageWidth, nodeBox.y],
+            text: `${topInCenterDiff.toFixed(0)}px`,
+            textPosition: { x: nodeBox.x + 10, y: nodeBox.y + 5 },
+          });
+        }
+
+        // Bottom inside center of another
+        const bottomInCenterDiff = Math.abs(otherCenterY - (nodeBox.y + nodeBox.height));
+        if (bottomInCenterDiff < threshold) {
+          const y = nodeBox.y + nodeBox.height;
+          newGuides.push({
+            points: [0, y, stageWidth, y],
+            text: `${bottomInCenterDiff.toFixed(0)}px`,
+            textPosition: { x: nodeBox.x + 10, y: y + 5 },
+          });
+        }
       });
 
-      // ✅ Center X snapping
-      const centerXDiff = nodeCenterX - canvasCenterX;
-      if (Math.abs(centerXDiff) < threshold) {
+      // Center X of canvas
+      const centerXDiff = Math.abs(nodeCenterX - canvasCenterX);
+      if (centerXDiff < threshold) {
         newGuides.push({
           points: [canvasCenterX, 0, canvasCenterX, stageHeight],
           text: `${Math.round(centerXDiff)}px`,
@@ -351,9 +477,9 @@ export const ElementRenderer = forwardRef<any, Props>(
         });
       }
 
-      // ✅ Center Y snapping
-      const centerYDiff = nodeCenterY - canvasCenterY;
-      if (Math.abs(centerYDiff) < threshold) {
+      // Center Y of canvas
+      const centerYDiff = Math.abs(nodeCenterY - canvasCenterY);
+      if (centerYDiff < threshold) {
         newGuides.push({
           points: [0, canvasCenterY, stageWidth, canvasCenterY],
           text: `${Math.round(centerYDiff)}px`,
