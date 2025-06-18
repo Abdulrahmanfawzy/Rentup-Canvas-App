@@ -5,6 +5,7 @@ import { useTheme } from "../ui/theme-provider";
 import { HistoryControls } from "./HistoryControls";
 import CanvasExportImport from "./CanvasExportImport";
 import ToggleTheme from "./ToggleTheme";
+import { ShortcutsHelp } from "../ui/ShortcutsHelp";
 
 const Navbar: FC = () => {
   const { theme } = useTheme();
@@ -22,6 +23,7 @@ const Navbar: FC = () => {
       </div>
       <div className="flex items-center space-x-4">
         <CanvasExportImport />
+        <ShortcutsHelp />
         <ToggleTheme />
       </div>
     </div>

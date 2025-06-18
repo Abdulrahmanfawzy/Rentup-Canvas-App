@@ -5,12 +5,14 @@ import Navbar from "./components/Navbar";
 import LeftSideBar from "./components/LeftSideBar";
 import RightSideBar from "./components/RightSideBar";
 import { CanvasProvider } from "./context/CanvasContext";
+import { KeyboardShortcutsHandler } from "./components/KeyboardShortcutsHandler";
 
 function App() {
   const stageRef = useRef<Konva.Stage | null>(null);
 
   return (
     <CanvasProvider stageRef={stageRef as RefObject<Konva.Stage>}>
+      <KeyboardShortcutsHandler />
       <div className="h-screen flex flex-col">
         {/* Header */}
         <Navbar />

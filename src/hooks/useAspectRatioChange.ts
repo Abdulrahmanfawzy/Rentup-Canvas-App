@@ -19,7 +19,7 @@ export function useAspectRatioChange() {
       "9:16": 9 / 16,
     };
 
-    const newWidth = 400;
+    const newWidth = 1080;
     const newHeight = Math.round(newWidth / aspectRatios[value]);
 
     const scaledElements = rescaleElementsForAspectRatio(
