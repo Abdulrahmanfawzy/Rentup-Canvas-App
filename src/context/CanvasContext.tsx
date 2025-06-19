@@ -1,6 +1,7 @@
 import { createContext, useContext, type FC, type RefObject } from "react";
 import Konva from "konva";
 import { useAppSelector } from "@/hooks/useRedux";
+import transformElementsKeys from "@/utils/transformElementKeys";
 
 interface CanvasContextType {
   stageRef: RefObject<Konva.Stage>;
@@ -21,16 +22,51 @@ export const CanvasProvider: FC<{
   const stageHeight = useAppSelector((state) => state.canvas.stageHeight);
   const stageWidth = useAppSelector((state) => state.canvas.stageWidth);
   const aspectRatio = useAppSelector((state) => state.canvas.aspectRatio);
+  const brandingColors = useAppSelector((state) => state.branding.colors);
+  const brandingFonts = useAppSelector((state) => state.branding.fontFamilies);
 
   const handleExportJSON = () => {
-    const exportData = {
+    const keyMappingsByType = {
+      text: {
+        backgroundStrokeWidth: "borderWidth",
+        backgroundStroke: "borderColor",
+        dashed: "borderStyle",
+      },
+      frame: {
+        dash: "borderStyle",
+        strokeWidth: "borderWidth",
+        stroke: "borderColor",
+        fitMode: "objectFit",
+      },
+    };
+
+    const fallbackMapping = {
+      stroke: "borderColor",
+      strokeWidth: "borderWidth",
+      backgroundStroke: "borderColor",
+      backgroundStrokeWidth: "borderWidth",
+      dashed: "borderStyle",
+    };
+
+    const transformedElements = transformElementsKeys(
       elements,
+      keyMappingsByType,
+      fallbackMapping
+    );
+
+    const exportData = {
+      elements: transformedElements,
       stage: {
         height: stageHeight,
         width: stageWidth,
         aspectRatio: aspectRatio,
       },
+      branding: {
+        colors: brandingColors,
+        fonts: brandingFonts,
+      },
     };
+
     const dataStr = JSON.stringify(exportData, null, 2);
     const blob = new Blob([dataStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);

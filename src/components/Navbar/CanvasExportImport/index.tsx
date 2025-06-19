@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCanvas } from "@/context/CanvasContext";
+import { addColor, addFont } from "@/features/branding/brandingSlice";
 
 const CanvasExportImport: FC = () => {
   const dispatch = useAppDispatch();
@@ -54,6 +55,32 @@ const CanvasExportImport: FC = () => {
             })
           );
           dispatch(setAspectRatio(importedData.stage.aspectRatio));
+
+          // ✅ استيراد الـ branding
+          if (importedData.branding) {
+            if (importedData.branding.colors) {
+              Object.entries(importedData.branding.colors).forEach(
+                ([key, value]) => {
+                  dispatch(addColor({ key, value: String(value) }));
+                }
+              );
+            }
+
+            if (importedData.branding.fonts) {
+              Object.entries(importedData.branding.fonts).forEach(
+                ([key, fontData]: [string, any]) => {
+                  dispatch(
+                    addFont({
+                      key,
+                      value: fontData.value,
+                      isFile: fontData.isFile,
+                      variant: fontData.variant,
+                    })
+                  );
+                }
+              );
+            }
+          }
         } else {
           alert("Invalid file format.");
         }
@@ -61,6 +88,7 @@ const CanvasExportImport: FC = () => {
         alert("Failed to import. Invalid JSON.");
       }
     };
+
     reader.readAsText(file);
   };
 
