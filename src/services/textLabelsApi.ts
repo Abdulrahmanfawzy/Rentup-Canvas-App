@@ -21,10 +21,10 @@ export type LabelResponse = {
 // حقن endpoints خاصة بـ TextLables
 const extendedApi = api.injectEndpoints({
   endpoints: (builder) => ({
-    getTextLabel: builder.query<LabelsData, void>({
-      query: () => "api/toilabels",
-      providesTags: ["TextLables"],
-    }),
+    getTextLabel: builder.query<LabelsData, string | void>({
+    query: (url) => url ?? "api/toilabels/",
+    providesTags: ["TextLables"],
+  }),
     postTextLabel: builder.mutation<LabelResponse, { label: string }>({
       query: (newLabel) => ({
         url: "api/toilabels/",

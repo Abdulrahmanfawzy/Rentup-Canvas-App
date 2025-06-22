@@ -1,7 +1,11 @@
 import { ColorInput } from "@/components/ui/controlled-inputs/ColorInput";
 import { TextInput } from "@/components/ui/controlled-inputs/TextInput";
 import { updateElement } from "@/features/canvas/canvasSlice";
-import type { BrandingType, CanvasElement, CanvasTextElement } from "@/features/canvas/types";
+import type {
+  BrandingType,
+  CanvasElement,
+  CanvasTextElement,
+} from "@/features/canvas/types";
 import { useAppDispatch, useAppSelector } from "@/hooks/useRedux";
 import PositionProperties from "../CommonProperties/PositionProperties";
 import ScaleProperties from "../CommonProperties/ScaleProperties";
@@ -24,6 +28,7 @@ import {
 } from "@/services/textLabelsApi";
 import { useEffect, useState } from "react";
 import { useBrandingResolver } from "@/hooks/useBrandingResolver"; // Added to resolve branded fonts
+import { useGetAllTagQuery, usePostFrameTagMutation } from "@/services/TagsApi";
 
 // Utility function to load Google Fonts dynamically
 const loadGoogleFont = (fontFamily: string) => {
@@ -55,6 +60,48 @@ export default function TextProperties({
   element: CanvasTextElement;
 }) {
   const {
+    data: tagsData,
+    isLoading: tagsLoading,
+    error: errorTags,
+  } = useGetAllTagQuery();
+  const [postFrameTag, { isLoading: postTagLoading, error: postTagError }] =
+    usePostFrameTagMutation();
+  // Normalize tagsData.results to options format
+  const tagOptions = tagsData
+    ? tagsData.map((item) => ({
+        id: String(item.id),
+        tag: item.tag,
+      }))
+    : [];
+
+  // Extract error message from errors
+  const errorMessage = errorTags
+    ? "Failed to load tags. Please try again."
+    : postTagError
+    ? (postTagError as any).data?.tag?.[0] ||
+      "Failed to create tag. Please try again."
+    : null;
+  const handleTagsChange = async (val: string | string[]) => {
+    const values = Array.isArray(val) ? val : val ? [val] : [];
+    const currentTags = tagOptions.map((opt) => opt.tag);
+
+    // Identify new tags (not in tagOptions)
+    const newTags = values.filter(
+      (tag) => tag && !currentTags.includes(tag) && tag.trim().length > 0
+    );
+    // Post new tags to the API
+    for (const newTag of newTags) {
+      try {
+        await postFrameTag({ tag: newTag }).unwrap();
+      } catch (err) {
+        console.error("Failed to create tag:", newTag, err);
+      }
+    }
+
+    // Update element.tags with the final values
+    update({ tags: values });
+  };
+  const {
     data: fontsData,
     isLoading: fontsLoading,
     error: fontsError,
@@ -78,11 +125,10 @@ export default function TextProperties({
     ? labelsData.results.map((item) => ({
         id: String(item.id),
         label: item.label,
-        example: item.example
+        example: item.example,
       }))
     : [];
-    console.log(labelOptions);
-    
+  console.log(labelOptions);
 
   // Handle tag creation and selection
   const handleLabelsChange = async (val: string | string[]) => {
@@ -308,7 +354,9 @@ export default function TextProperties({
                 const isBrandingType = (value: any): value is BrandingType =>
                   value === "fixed" || value === "dynamic";
 
-                const validBrandingType = isBrandingType(fontBrandingType) ? fontBrandingType : undefined;
+                const validBrandingType = isBrandingType(fontBrandingType)
+                  ? fontBrandingType
+                  : undefined;
 
                 const resolvedFont = resolveFont("", validBrandingType);
                 if (resolvedFont.isFile) {
@@ -411,6 +459,21 @@ export default function TextProperties({
               errorLabels || postTextLabelError ? "Something went wrong" : null
             }
             placeholder="Create or select labels..."
+          />
+          <SelectInput
+            creatable
+            isMulti
+            isSearchable
+            className="col-span-full"
+            label="Tags"
+            value={element.tags as string[]}
+            options={tagOptions}
+            valueKey="tag"
+            labelKey="tag"
+            onChange={handleTagsChange}
+            isLoading={tagsLoading || postTagLoading}
+            error={errorMessage}
+            placeholder="Create or select tags..."
           />
         </>
       )}

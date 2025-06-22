@@ -11,11 +11,16 @@ export const api = createApi({
       if (csrfToken) {
         headers.set("X-CSRFTOKEN", csrfToken);
       } */
-      headers.set("Accept", "*/*");
-      headers.set("Content-Type", "application/json");
       return headers;
     },
   }),
-  tagTypes: ["FrameTags", "FrameTypes", "TextLables", "FramePostion"], // ممكن تزود عليها بعدين: Labels, Users, etc.
+  tagTypes: [
+    "Tags",
+    "FrameTypes",
+    "TextLables",
+    "FramePostion",
+    "Templates",
+    "Template",
+  ], // ممكن تزود عليها بعدين: Labels, Users, etc.
   endpoints: () => ({}),
 });

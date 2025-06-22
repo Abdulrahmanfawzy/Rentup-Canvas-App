@@ -8,7 +8,8 @@ export type ActiveCategoryType =
   | "upload"
   | "icons"
   | "qrCode"
-  | "branding";
+  | "branding"
+  | "designes";
 
 interface UiState {
   activeCategory: ActiveCategoryType;

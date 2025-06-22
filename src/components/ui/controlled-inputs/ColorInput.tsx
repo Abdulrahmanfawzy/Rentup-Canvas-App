@@ -28,6 +28,8 @@ export function ColorInput({
 
   const colorPickerRef = useRef<HTMLInputElement>(null);
 
+  // لما المكون يتعمل mount أو القيمة تتغير
+  // نحول القيمة للـ hex والشفافية
   useEffect(() => {
     const color = tinycolor(value);
     setHexValue(color.toHexString());

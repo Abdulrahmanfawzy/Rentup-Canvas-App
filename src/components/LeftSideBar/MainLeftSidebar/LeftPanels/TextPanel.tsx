@@ -3,11 +3,13 @@ import { useAppDispatch } from "@/hooks/useRedux";
 import { Button } from "../../../ui/Button";
 import { useGetTextLabelQuery } from "@/services/textLabelsApi";
 import { useState } from "react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 export function TextPanel() {
   const dispatch = useAppDispatch();
-  const { data: labelsData, isLoading, error } = useGetTextLabelQuery();
   const [searchTerm, setSearchTerm] = useState("");
+  const [url, setUrl] = useState<string | null | undefined>(undefined);
+  const { data: labelsData, isLoading, error } = useGetTextLabelQuery(url ?? undefined);
 
   // Normalize labelsData.results to options format
   const labelOptions = labelsData?.results
@@ -23,9 +25,6 @@ export function TextPanel() {
     (item.label?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
-  console.log(filteredLabels);
-  
-  
   return (
     <div>
       <Button onClick={() => dispatch(addElement({ type: "text", text: "Edit Me Now..." }))}>
@@ -64,10 +63,24 @@ export function TextPanel() {
                   >
                     {item.example}
                   </p>
+
+                  
                 </div>
-              ) : null // ⛔️ تخطّي العناصر اللي مالهاش example
+              ) : null 
             ))
           : "No result found"}
+
+          {filteredLabels.length > 0 && 
+          
+            <div className="flex gap-4 mt-4">
+              <button className="w-1/2 cursor-pointer border py-2" onClick={() => setUrl(labelsData?.previous)} disabled={!labelsData?.previous}>
+                <ArrowLeft size={24} className=" mx-auto" />
+              </button>
+              <button className="w-1/2 cursor-pointer border py-2" onClick={() => setUrl(labelsData?.next)} disabled={!labelsData?.next}>
+                <ArrowRight size={24} className="mx-auto" />
+              </button>
+            </div>
+          }
 
       </div>
 

@@ -17,7 +17,7 @@ export type OptionType = Record<string, any>;
 // Define component props
 export interface EnhancedSelectInputProps {
   label?: string;
-  value: string | string[];
+  value: string | string[] | number[];
   onChange: (val: string | string[]) => void;
   options: OptionType[] | string[];
   placeholder?: string;
@@ -256,7 +256,7 @@ const SelectInput = memo(
     const [currentValue, setCurrentValue] = useState<
       OptionType | OptionType[] | null
     >(null);
-    const prevValueRef = useRef<string | string[] | null>(null);
+    const prevValueRef = useRef<string | string[] | number[] | null>(null);
 
     // Normalize options to always be OptionType[] format with dynamic valueKey and labelKey
     const normalizedOptions = useMemo<OptionType[]>(() => {

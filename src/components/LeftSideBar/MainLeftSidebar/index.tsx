@@ -8,6 +8,7 @@ import { UploadPanel } from "./LeftPanels/UploadPanel";
 import { IconsPanel } from "./LeftPanels/IconsPanel";
 import QRCodePanel from "./LeftPanels/QRCodePanel";
 import { BrandingPanel } from "./LeftPanels/BrandingPanel";
+import DesignPanel from "./LeftPanels/DesignPanel";
 
 const MainSidebar: FC = () => {
   const { activeCategory } = useAppSelector((state) => state.ui);
@@ -26,6 +27,7 @@ const MainSidebar: FC = () => {
         {activeCategory === "icons" && <IconsPanel />}
         {activeCategory === "qrCode" && <QRCodePanel />}
         {activeCategory === "branding" && <BrandingPanel />}
+        {activeCategory === "designes" && <DesignPanel />}
       </div>
     </div>
   );
