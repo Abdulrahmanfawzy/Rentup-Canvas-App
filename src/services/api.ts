@@ -21,6 +21,7 @@ export const api = createApi({
     "FramePostion",
     "Templates",
     "Template",
+    "FrameTags"
   ], // ممكن تزود عليها بعدين: Labels, Users, etc.
   endpoints: () => ({}),
 });

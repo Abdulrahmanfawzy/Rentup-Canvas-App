@@ -32,7 +32,7 @@ const extendedApi = api.injectEndpoints({
 
     // endpoint جديد لجلب كل الـ tags من كل الصفحات
     getAllTag: builder.query<AllTagsData, void>({
-      queryFn: async (arg, api, extraOptions, baseQuery) => {
+      queryFn: async (_, __, ___, baseQuery) => {
         let allTags: AllTagsData = [];
         let nextUrl: string | null = "creatives/tags/";
 
