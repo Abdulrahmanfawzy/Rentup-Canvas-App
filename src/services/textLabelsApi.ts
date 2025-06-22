@@ -1,6 +1,13 @@
 // src/services/textLablesApi.ts
 import { api } from "./api";
 
+export type Label = {
+  id: number;
+  label: string;
+  example: string;
+};
+
+
 // أنواع البيانات
 export type LabelsData = {
   count: number;
@@ -21,6 +28,26 @@ export type LabelResponse = {
 // حقن endpoints خاصة بـ TextLables
 const extendedApi = api.injectEndpoints({
   endpoints: (builder) => ({
+    getAllTextLabels: builder.query<Label[], void>({
+    async queryFn(_arg, _queryApi, _extraOptions, baseQuery) {
+      let allLabels: Label[] = [];
+      let nextUrl: string | null = "api/toilabels/";
+
+      while (nextUrl) {
+        const result = await baseQuery({ url: nextUrl });
+        if (result.error) return { error: result.error };
+
+        const data = result.data as LabelsData;
+        allLabels = [...allLabels, ...data.results];
+        nextUrl = data.next;
+      }
+
+      return { data: allLabels };
+    },
+    providesTags: ["TextLables"],
+  }),
+
+
     getTextLabel: builder.query<LabelsData, string | void>({
     query: (url) => url ?? "api/toilabels/",
     providesTags: ["TextLables"],
@@ -37,4 +64,8 @@ const extendedApi = api.injectEndpoints({
   overrideExisting: false,
 });
 
-export const { useGetTextLabelQuery, usePostTextLabelMutation } = extendedApi;
+export const {
+  useGetTextLabelQuery,
+  useGetAllTextLabelsQuery,
+  usePostTextLabelMutation,
+} = extendedApi;
