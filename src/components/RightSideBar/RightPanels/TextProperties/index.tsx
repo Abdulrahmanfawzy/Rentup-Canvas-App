@@ -23,7 +23,7 @@ import { MdBlurOn } from "react-icons/md";
 import { toPercentFontSize } from "@/hooks/usePercentConverter";
 import { useGetGoogleFontsQuery } from "@/services/googleFontsApi";
 import {
-  useGetTextLabelQuery,
+  useGetAllTextLabelsQuery,
   usePostTextLabelMutation,
 } from "@/services/textLabelsApi";
 import { useEffect, useState } from "react";
@@ -110,7 +110,7 @@ export default function TextProperties({
     data: labelsData,
     isLoading: labelsLoading,
     error: errorLabels,
-  } = useGetTextLabelQuery();
+  } = useGetAllTextLabelsQuery();
   const [
     postTextLabel,
     { isLoading: postTextLabelLoading, error: postTextLabelError },
@@ -121,8 +121,8 @@ export default function TextProperties({
   const dispatch = useAppDispatch();
 
   // Normalize labelsData.results to options format
-  const labelOptions = labelsData?.results
-    ? labelsData.results.map((item) => ({
+  const labelOptions = labelsData
+    ? labelsData.map((item) => ({
         id: String(item.id),
         label: item.label,
         example: item.example,
