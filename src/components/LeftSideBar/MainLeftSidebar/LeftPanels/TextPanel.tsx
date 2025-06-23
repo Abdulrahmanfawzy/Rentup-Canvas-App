@@ -4,20 +4,24 @@ import { useAppDispatch } from "@/hooks/useRedux";
 import { useGetAllTextLabelsQuery } from "@/services/textLabelsApi";
 import { useState } from "react";
 
-
 export function TextPanel() {
   const dispatch = useAppDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const { data: allLabels, isLoading, error } = useGetAllTextLabelsQuery();
 
-  const filteredLabels = allLabels?.filter((item) =>
-    (item.example?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
-    (item.label?.toLowerCase() || "").includes(searchTerm.toLowerCase())
+  const filteredLabels = allLabels?.filter(
+    (item) =>
+      (item.example?.toLowerCase() || "").includes(searchTerm.toLowerCase()) ||
+      (item.label?.toLowerCase() || "").includes(searchTerm.toLowerCase())
   );
 
   return (
     <div>
-      <Button onClick={() => dispatch(addElement({ type: "text", text: "Edit Me Now..." }))}>
+      <Button
+        onClick={() =>
+          dispatch(addElement({ type: "text", text: "Edit Me Now..." }))
+        }
+      >
         Add Text
       </Button>
 
@@ -46,7 +50,7 @@ export function TextPanel() {
                       addElement({
                         type: "text",
                         text: item.example,
-                        toi_labels: [item.label],
+                        toi_labels: item.label,
                       })
                     )
                   }

@@ -129,26 +129,32 @@ export default function TextProperties({
       }))
     : [];
   console.log(labelOptions);
-
+  // get label option by label
+  const getLabelOption = (label: string) => {
+    return labelOptions.find((opt) => opt.label === label);
+  };
   // Handle tag creation and selection
   const handleLabelsChange = async (val: string | string[]) => {
-    const values = Array.isArray(val) ? val : val ? [val] : [];
-    const currentTags = labelOptions.map((opt) => opt.label);
-    // Identify new label (not in tagOptions)
-    const newLabels = values.filter(
-      (tag) => tag && !currentTags.includes(tag) && tag.trim().length > 0
-    );
-    // Post new tags to the API
-    for (const newLabel of newLabels) {
-      try {
-        await postTextLabel({ label: newLabel }).unwrap();
-      } catch (err) {
-        console.error("Failed to create label:", newLabel, err);
-      }
+    const label = typeof val === "string" ? val.trim() : "";
+
+    if (!label) {
+      update({ toi_labels: "" });
+      return;
     }
 
-    // Update element.tags with the final values
-    update({ toi_labels: values });
+    const currentTags = labelOptions.map((opt) => opt.label);
+
+    if (!currentTags.includes(label)) {
+      try {
+        await postTextLabel({ label }).unwrap();
+      } catch (err) {
+        console.error("Failed to create label:", label, err);
+      }
+    }
+    update({ toi_labels: getLabelOption(label)?.label });
+    /*     update({ initialValue: getLabelOption(label)?.example });
+    update({ labelId: parseInt(getLabelOption(label)?.id || "0") }); */
+    // console.log(element);
   };
 
   const update = <T extends CanvasTextElement>(updates: Partial<T>) => {
@@ -445,7 +451,6 @@ export default function TextProperties({
 
           <SelectInput
             creatable
-            isMulti
             isSearchable
             className="col-span-full"
             label="Label"

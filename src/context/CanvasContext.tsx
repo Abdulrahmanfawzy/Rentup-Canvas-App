@@ -143,6 +143,7 @@ export const CanvasProvider: FC<{
 
     const texts: {
       id: string;
+      tags: string[];
       toi_labels: string[];
     }[] = [];
 
@@ -163,11 +164,13 @@ export const CanvasProvider: FC<{
       } else if (el.type === "text") {
         const textEl = el as {
           id: string;
+          tags: string[];
           toi_labels?: string[];
         };
 
         texts.push({
           id: textEl.id,
+          tags: textEl.tags || [],
           toi_labels: textEl.toi_labels || [],
         });
       }

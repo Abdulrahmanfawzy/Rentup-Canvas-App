@@ -29,6 +29,8 @@ import { useGetAllTagQuery } from "@/services/TagsApi";
 import transformElementsKeys from "@/utils/transformElementKeys";
 import { useCanvas } from "@/context/CanvasContext";
 import { Button } from "@/components/ui/Button";
+import { addTemplateId } from "@/features/form/saveFormSlice";
+import { useDispatch } from "react-redux";
 
 const formSchema = z.object({
   name: z
@@ -161,9 +163,11 @@ export default function GeneralForm() {
 
   const [createTemplate, { isLoading }] = useCreateTemplateMutation();
   const { data: frameTags } = useGetAllTagQuery();
+  const dispatch = useDispatch();
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     try {
+      console.log("Submitting values:", values);
       console.log("Submitting values:", values);
 
       // Create FormData object
@@ -210,6 +214,7 @@ export default function GeneralForm() {
       // Uncomment to actually submit
       const response = await createTemplate(formData).unwrap();
       console.log("Template created:", response);
+      dispatch(addTemplateId(response.id));
     } catch (error) {
       console.error("Failed to create template:", error);
     }

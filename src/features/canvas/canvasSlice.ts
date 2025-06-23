@@ -87,7 +87,11 @@ const canvasSlice = createSlice({
       state,
       action: PayloadAction<
         | { type: "icon"; iconName: string }
-        | { type: "text"; text: string; toi_labels?: string[] }
+        | {
+            type: "text";
+            text: string;
+            toi_labels?: string;
+          }
         | { type: Exclude<ElementType, "icon" | "text"> }
       >
     ) => {
@@ -102,7 +106,7 @@ const canvasSlice = createSlice({
             id: `text-${currentId}`,
             fontSize_percent: 2.5,
             text: action.payload.text ?? "Edit Me Now...",
-            toi_labels: action.payload.toi_labels ?? [], // ✅ لو جت من الديسباتش خدها، لو لأ خالي
+            toi_labels: action.payload.toi_labels ?? "", // ✅ لو جت من الديسباتش خدها، لو لأ خالي
             fill: "#524C4C", // background rect
             background: "#fff",
             padding: 8,
