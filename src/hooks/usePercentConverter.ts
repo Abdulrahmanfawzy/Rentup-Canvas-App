@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 export function usePercentConverter() {
   const toPercent = useCallback((value: number, total: number) => {
-    return Number(Number((value / total)).toFixed(2)); // value of shape (width, height, x , y) -- total (width,height) of canvas elment
+    return Number(Number(value / total)); // value of shape (width, height, x , y) -- total (width,height) of canvas elment
   }, []);
 
   const fromPercent = useCallback((percent: number, total: number) => {
@@ -13,13 +13,21 @@ export function usePercentConverter() {
 }
 
 // get percent from pixels of fontsize
-export function toPercentFontSize(fontSize: number, stageWidth: number, stageHeight: number) {
+export function toPercentFontSize(
+  fontSize: number,
+  stageWidth: number,
+  stageHeight: number
+) {
   const avg = (stageWidth + stageHeight) / 2;
-  return Number(((fontSize / avg)).toFixed(2));
+  return Number(fontSize / avg);
 }
 
 // get pixels from percent of fontsize
-export function fromPercentFontSize(percent: number, stageWidth: number, stageHeight: number) {
+export function fromPercentFontSize(
+  percent: number,
+  stageWidth: number,
+  stageHeight: number
+) {
   const avg = (stageWidth + stageHeight) / 2;
   return (percent / 100) * avg;
 }

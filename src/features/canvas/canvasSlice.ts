@@ -59,17 +59,19 @@ let shapeIdCounter = 1;
 const createBaseElement = (id: string): Omit<CanvasElement, "type"> => {
   const width = 150;
   const height = 100;
-
+  const toPercent = (value: number, total: number) => {
+    return Number(Number(value / total));
+  };
   return {
     id,
     x: 100,
     y: 100,
     width,
     height,
-    x_percent: 0.1,
-    y_percent: 0.1,
-    width_percent: 0.15,
-    height_percent: 0.16,
+    x_percent: toPercent(100, 1080),
+    y_percent: toPercent(100, 1080),
+    width_percent: toPercent(width, 1080),
+    height_percent: toPercent(height, 1080),
     rotation: 0,
     selected: false,
     fill: "#00A8E8",
