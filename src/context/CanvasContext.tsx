@@ -2,6 +2,13 @@ import { createContext, useContext, type FC, type RefObject } from "react";
 import Konva from "konva";
 import { useAppSelector } from "@/hooks/useRedux";
 import transformElementsKeys from "@/utils/transformElementKeys";
+import { useDispatch } from "react-redux";
+import {
+  setAspectRatio,
+  setElements,
+  setStageSize,
+} from "@/features/canvas/canvasSlice";
+import { addColor, addFont } from "@/features/branding/brandingSlice";
 
 interface CanvasContextType {
   stageRef: RefObject<Konva.Stage>;
@@ -9,7 +16,7 @@ interface CanvasContextType {
   handleExportPNG: () => void;
   handleExportSVG: () => void;
   handleExportSummary: () => void;
-  handleImport: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  handleImport: (jsonData: string) => void;
 }
 
 const CanvasContext = createContext<CanvasContextType | undefined>(undefined);
@@ -18,6 +25,7 @@ export const CanvasProvider: FC<{
   children: React.ReactNode;
   stageRef: RefObject<Konva.Stage>;
 }> = ({ children, stageRef }) => {
+  const dispatch = useDispatch();
   const elements = useAppSelector((state) => state.canvas.elements);
   const stageHeight = useAppSelector((state) => state.canvas.stageHeight);
   const stageWidth = useAppSelector((state) => state.canvas.stageWidth);
@@ -129,9 +137,65 @@ export const CanvasProvider: FC<{
     }
   };
 
-  const handleImport = () => {
-    // Import logic moved to CanvasExportImport for consistency
-    // This is just a placeholder to satisfy the interface
+  const handleImport = (jsonData: string) => {
+    try {
+      const importedData = JSON.parse(jsonData);
+
+      if (
+        importedData &&
+        Array.isArray(importedData.elements) &&
+        importedData.stage &&
+        importedData.stage.height &&
+        importedData.stage.width &&
+        importedData.stage.aspectRatio
+      ) {
+        // ✅ عناصر الكنڤا
+        dispatch(setElements(importedData.elements));
+
+        // ✅ حجم الستيج
+        dispatch(
+          setStageSize({
+            height: importedData.stage.height,
+            width: importedData.stage.width,
+          })
+        );
+
+        // ✅ Aspect Ratio
+        dispatch(setAspectRatio(importedData.stage.aspectRatio));
+
+        // ✅ ألوان البراندينج
+        if (importedData.branding?.colors) {
+          Object.entries(importedData.branding.colors).forEach(
+            ([key, value]) => {
+              dispatch(addColor({ key, value: String(value) }));
+            }
+          );
+        }
+
+        // ✅ خطوط البراندينج
+        if (importedData.branding?.fonts) {
+          Object.entries(importedData.branding.fonts).forEach(
+            ([key, fontData]: [string, any]) => {
+              dispatch(
+                addFont({
+                  key,
+                  value: fontData.value,
+                  isFile: fontData.isFile,
+                  variant: fontData.variant,
+                })
+              );
+            }
+          );
+        }
+
+        console.log("✅ Import successful");
+      } else {
+        alert("❌ Invalid file structure.");
+      }
+    } catch (error) {
+      alert("❌ Failed to import. Invalid JSON format.");
+      console.error("Import error:", error);
+    }
   };
 
   const handleExportSummary = () => {

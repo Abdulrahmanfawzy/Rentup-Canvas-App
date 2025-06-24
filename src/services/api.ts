@@ -1,10 +1,10 @@
 // src/services/api.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-
+export const BASE_API_URL = "https://djangoapi.markomlabs.com";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: "https://djangoapi.markomlabs.com/",
+    baseUrl: BASE_API_URL,
     prepareHeaders: (headers) => {
       /*       const csrfToken =
         "Lk2uGM6UeXEJCdCBhzUyMdxlOdYcoX3Cy3dpW6qrfD0I3hF3mtAPW9ZmezIjiM7O";

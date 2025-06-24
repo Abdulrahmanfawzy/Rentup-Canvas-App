@@ -14,16 +14,12 @@ export type TemplateData = {
   is_public: boolean;
   default_primary: string;
   default_secondary_color: string;
+  icon?: string;
   created_at?: string;
   updated_at?: string;
 };
 
-export type TemplatesResponse = {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: TemplateData[];
-};
+export type TemplatesResponse = TemplateData[];
 
 export type TemplateCreateResponse = TemplateData;
 
@@ -50,10 +46,9 @@ const extendedApi = api.injectEndpoints({
       TemplateCreateResponse,
       { id: number; data: FormData }
     >({
-      query: ({ id, data }) => ({
+      query: ({ id }) => ({
         url: `creatives/templates/${id}`,
         method: "PUT",
-        body: data,
       }),
       invalidatesTags: ["Templates", "Template"],
     }),

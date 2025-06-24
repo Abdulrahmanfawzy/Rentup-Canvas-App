@@ -75,7 +75,7 @@ export default function GeneralForm() {
     try {
       // Capture the stage as data URL with high quality
       const dataURL = stageRef.current.toDataURL({
-        mimeType: "image/jpeg",
+        mimeType: "image/png",
         quality: 0.7,
         pixelRatio: 1,
       });
