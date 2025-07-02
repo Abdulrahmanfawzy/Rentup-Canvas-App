@@ -67,8 +67,8 @@ export interface CanvasElement {
 
   fontWeight?: string;
   fontStyle?: string;
+  white_space?: string;
 }
-
 export interface CanvasFrameElement extends CanvasElement {
   type: "frame";
   dash: number[];
@@ -101,6 +101,7 @@ export interface CanvasTextElement extends CanvasElement {
     bottomRight?: number;
     bottomLeft?: number;
   };
+  white_space?: string;
 }
 
 export interface CanvasImageElement extends CanvasElement {

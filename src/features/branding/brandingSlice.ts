@@ -13,11 +13,17 @@ interface BrandingState {
 
 const initialState: BrandingState = {
   colors: {
-    primary: "#FF0000",
-    secondary: "#00FF00",
+    primary_colors: "#FF0000",
+    secondary_colors: "#00FF00",
+    accent_colors: "#0000FF",
   },
   fontFamilies: {
-    default: { value: "Arial", isFile: false, variant: "regular" },
+    primary_font: { value: "Arial", isFile: false, variant: "regular" },
+    secondary_font: {
+      value: "Times New Roman",
+      isFile: false,
+      variant: "regular",
+    },
   },
 };
 
