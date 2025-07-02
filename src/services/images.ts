@@ -16,7 +16,7 @@ export interface ImageData {
   developer: string | null;
   tags: Tag[];
   name: string;
-  type: "image"; // literal type keeps IntelliSense strict
+  type: "image";
   public: boolean;
   image: string;
   video: string | null;
@@ -52,21 +52,35 @@ const assetsApi = api.injectEndpoints({
      * Fetch a paginated list of image assets.
      * Pass `{ next: url }` returned from the previous response to continue pagination.
      * If no `next` is provided, the first page ("creatives/assets/") is fetched.
+     * Optionally pass `project_id` to filter by project.
      */
-    getAssets: builder.query<ImagesResponse, void | { next?: string | null }>({
-      query: (arg) =>
-        arg && arg.next
-          ? { url: arg.next } // the API already returns an absolute URL in `next`
-          : { url: "creatives/assets/" },
+    getAssets: builder.query<
+      ImagesResponse,
+      void | { next?: string | null; project_id?: number }
+    >({
+      query: (arg) => {
+        if (arg && arg.next) {
+          return { url: arg.next };
+        }
+
+        const params: Record<string, string | number> = {};
+        if (arg && arg.project_id !== undefined) {
+          params.project_id = arg.project_id;
+        }
+
+        return {
+          url: "creatives/assets/",
+          params,
+        };
+      },
       providesTags: (result) =>
         result
           ? [
-              // individual asset caching
               ...result.results.map(({ id }) => ({
                 type: "Assets" as const,
                 id,
               })),
-              { type: "Assets", id: "LIST" }, // list-level cache
+              { type: "Assets", id: "LIST" },
             ]
           : [{ type: "Assets", id: "LIST" }],
     }),
@@ -101,7 +115,7 @@ const assetsApi = api.injectEndpoints({
     >({
       query: ({ id, data }) => ({
         url: `creatives/assets/${id}`,
-        method: "PUT", // or "PATCH" if your backend supports partial updates
+        method: "PUT",
         body: data,
       }),
       invalidatesTags: (_res, _err, { id }) => [

@@ -11,6 +11,8 @@ export const api = createApi({
       if (csrfToken) {
         headers.set("X-CSRFTOKEN", csrfToken);
       } */
+      "Authorization: Basic YToxMjM0";
+      headers.set("Authorization", "Basic YToxMjM0");
       return headers;
     },
   }),
@@ -25,6 +27,7 @@ export const api = createApi({
     "FrameTags",
     "TemplateTextBoxes",
     "Assets",
+    "Projects",
   ], // ممكن تزود عليها بعدين: Labels, Users, etc.
   endpoints: () => ({}),
 });

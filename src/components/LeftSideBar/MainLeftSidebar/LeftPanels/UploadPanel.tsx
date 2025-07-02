@@ -1,22 +1,65 @@
+"use client";
+
+import type React from "react";
+
 import { useDispatch } from "react-redux";
 import { useEffect, useState } from "react";
-import { FaCloudUploadAlt } from "react-icons/fa";
+import { CloudUpload } from "lucide-react";
 
 import { addImageElement } from "@/features/canvas/canvasSlice";
 
 import { BASE_API_URL } from "@/services/api";
-import { Button } from "@/components/ui/Button";
 import {
   useGetAssetsQuery,
   useLazyGetAssetsQuery,
   type ImageDataWithId,
 } from "@/services/images";
+import { useGetProjectsQuery } from "@/services/projectsApi";
+import { toast } from "sonner";
+import SelectInput from "@/components/ui/controlled-inputs/SelectInput";
+import { useGetFrameTypesQuery } from "@/services/frameTypesApi";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/Button";
 
 export function UploadPanel() {
+  // saving project id
+  const [projectId, setProjectId] = useState<number | null>(null);
+
   const dispatch = useDispatch();
+  const {
+    data: projects,
+    isLoading: isProjectsLoading,
+    isError: isProjectsError,
+    error: projectsError,
+  } = useGetProjectsQuery();
+
+  const {
+    data: assetsTypes,
+    isLoading: isAssetsTypesLoading,
+    isError: isAssetTypesError,
+    error: assetTypesError,
+  } = useGetFrameTypesQuery();
+
+  // Handle errors
+  useEffect(() => {
+    if (isProjectsError) {
+      console.error("Error fetching projects:", projectsError);
+      toast.error("Error fetching projects");
+    }
+    if (isAssetTypesError) {
+      console.error("Error fetching types:", assetTypesError);
+      toast.error("Error fetching asset types");
+    }
+  }, [isProjectsError, projectsError, isAssetTypesError, assetTypesError]);
 
   // Fetch first page
-  const { data, isLoading, isError } = useGetAssetsQuery();
+  const {
+    data,
+    isLoading: isAssetsLoading,
+    isError: isAssetsError,
+  } = useGetAssetsQuery({
+    project_id: projectId ?? undefined,
+  });
 
   // Lazy fetch next page
   const [triggerNext] = useLazyGetAssetsQuery();
@@ -50,6 +93,7 @@ export function UploadPanel() {
             height: img.height,
           })
         );
+        toast.success("Image added to canvas");
       };
     };
     reader.readAsDataURL(file);
@@ -65,6 +109,7 @@ export function UploadPanel() {
       setNextUrl(next.next);
     } catch (err) {
       console.error("Error loading next page:", err);
+      toast.error("Failed to load more assets");
     }
   };
 
@@ -77,20 +122,21 @@ export function UploadPanel() {
         height: 300,
       })
     );
+    toast.success(`${asset.name} added to canvas`);
   };
 
   return (
     <div className="w-full max-w-xl mx-auto space-y-6">
       {/* Upload Box */}
-      <div className="border-2 border-dashed border-gray-400 rounded-lg p-5 flex flex-col items-center justify-center">
-        <div className="w-10 h-10 mb-2 text-gray-700">
+      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 flex flex-col items-center justify-center hover:border-gray-400 transition-colors">
+        <div className="w-12 h-12 mb-4 text-gray-500">
           <div className="bg-gray-100 rounded-full p-3 inline-flex items-center justify-center">
-            <FaCloudUploadAlt className="w-5 h-5" />
+            <CloudUpload className="w-6 h-6" />
           </div>
         </div>
 
         <h2 className="text-xl font-medium mb-2">Choose a file</h2>
-        <p className="text-[12px] mb-4">JPEG, PNG, PDF, SVG</p>
+        <p className="text-sm text-gray-600 mb-4">JPEG, PNG, PDF, SVG</p>
 
         <input
           type="file"
@@ -102,41 +148,95 @@ export function UploadPanel() {
 
         <label
           htmlFor="file-upload"
-          className="bg-primary text-primary-foreground shadow-xs hover:bg-primary/90 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-all cursor-pointer h-9 px-4 py-2"
+          className="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors cursor-pointer h-10 px-6 py-2"
         >
-          Browse File
+          Browse Files
         </label>
       </div>
 
-      {/* Remote Assets */}
-      {isLoading && <p>Loading assets...</p>}
-      {isError && <p className="text-destructive">Failed to load assets.</p>}
+      {/* Project Filter */}
+      <SelectInput
+        value={""}
+        isSearchable
+        className="w-full"
+        label="Filter by Project"
+        options={projects?.results || []}
+        valueKey="id"
+        labelKey="name"
+        onChange={(value) => {
+          if (typeof value === "number") {
+            setProjectId(value);
+          } else if (value === "") {
+            setProjectId(null);
+          }
+        }}
+        isLoading={isProjectsLoading}
+        error={isProjectsError ? "Error fetching projects" : undefined}
+        placeholder="All Projects"
+      />
 
-      <div
-        className="grid grid-cols-2
-      
-      gap-4"
-      >
-        {assets.map((asset) => (
-          <button
-            key={asset.id}
-            type="button"
-            onClick={() => handleRemoteClick(asset)}
-            className="rounded border hover:shadow focus:outline-none"
+      {/* Remote Assets */}
+      {isAssetsLoading && (
+        <p className="text-center text-gray-600">Loading assets...</p>
+      )}
+      {isAssetsError && (
+        <p className="text-center text-destructive">Failed to load assets.</p>
+      )}
+
+      {assetsTypes && assetsTypes.length > 0 && (
+        <Tabs defaultValue={assetsTypes[0][1]} className="w-full">
+          <TabsList
+            className="grid w-full"
+            style={{
+              gridTemplateColumns: `repeat(${assetsTypes.length}, 1fr)`,
+            }}
           >
-            <img
-              src={`${BASE_API_URL}${asset.image}`}
-              alt={asset.name}
-              className="w-full h-auto object-cover"
-            />
-          </button>
-        ))}
-      </div>
+            {assetsTypes.map((type, index) => (
+              <TabsTrigger key={type[1]} value={type[1]}>
+                {index}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+
+          {assetsTypes.map((type) => (
+            <TabsContent key={type[1]} value={type[1]} className="mt-4">
+              <div className="grid grid-cols-2 gap-4">
+                {assets
+                  .filter((asset) => asset.type === type[0])
+                  .map((asset) => (
+                    <button
+                      key={asset.id}
+                      type="button"
+                      onClick={() => handleRemoteClick(asset)}
+                      className="rounded-lg border hover:shadow-md focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all overflow-hidden"
+                    >
+                      <img
+                        src={`${BASE_API_URL}${asset.image}`}
+                        alt={asset.name}
+                        className="w-full h-32 object-contain"
+                      />
+                      <div className="p-2 text-sm text-gray-700 truncate">
+                        {asset.name}
+                      </div>
+                    </button>
+                  ))}
+              </div>
+
+              {assets.filter((asset) => asset.type === type[0]).length ===
+                0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No {type[0].toLowerCase()} assets found
+                </div>
+              )}
+            </TabsContent>
+          ))}
+        </Tabs>
+      )}
 
       {/* Load More Button */}
       {nextUrl && (
         <Button variant="outline" onClick={handleLoadMore} className="w-full">
-          Load more
+          Load More Assets
         </Button>
       )}
     </div>

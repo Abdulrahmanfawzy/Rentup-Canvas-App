@@ -6,6 +6,7 @@ import LeftSideBar from "./components/LeftSideBar";
 import RightSideBar from "./components/RightSideBar";
 import { CanvasProvider } from "./context/CanvasContext";
 import { KeyboardShortcutsHandler } from "./components/KeyboardShortcutsHandler";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
   const stageRef = useRef<Konva.Stage | null>(null);
@@ -30,6 +31,7 @@ function App() {
           <RightSideBar />
         </div>
       </div>
+      <Toaster position="top-right" closeButton={true} />
     </CanvasProvider>
   );
 }
