@@ -35,7 +35,7 @@ export function UploadPanel() {
 
   const {
     data: assetsTypes,
-    isLoading: isAssetsTypesLoading,
+    // isLoading: isAssetsTypesLoading,
     isError: isAssetTypesError,
     error: assetTypesError,
   } = useGetFrameTypesQuery();
