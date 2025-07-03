@@ -22,74 +22,76 @@ import { Badge } from "@/components/ui/badge";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useAppSelector } from "@/hooks/useRedux";
-import { useCreateTemplateMutation } from "@/services/templateApi";
+import {
+  useCreateTemplateMutation,
+  useGetTemplateQuery,
+  useUpdateTemplateMutation,
+} from "@/services/templateApi";
 import { useGetAllTagQuery } from "@/services/TagsApi";
 import transformElementsKeys from "@/utils/transformElementKeys";
 import { useCanvas } from "@/context/CanvasContext";
 import { Button } from "@/components/ui/Button";
 import { addTemplateId } from "@/features/form/saveFormSlice";
 import { useDispatch } from "react-redux";
+import { useEffect, useCallback } from "react";
+import FramesForm from "../FramesForm";
 
+// Define the form schema with stricter validation
 const formSchema = z.object({
   name: z
     .string()
     .min(2, "Name must be at least 2 characters")
     .max(50, "Name cannot exceed 50 characters"),
   group: z.string().min(1, "Group cannot be empty"),
-  type: z.string().min(1, "Type cannot be empty"),
-  category: z.string(),
+  type: z.enum(["default", "customized", "branded"], {
+    required_error: "Type cannot be empty",
+  }),
+  category: z.enum([
+    "commercial_ads",
+    "commercial_ads_for_developers",
+    "commercial_ads_for_project",
+    "seasonal_posts",
+    "special_events",
+  ]),
   tags: z.array(z.number()),
   aspect_ratio: z.enum(["9:16", "1:1"]),
-  raw_input: z.string(),
+  raw_input: z.string().refine(
+    (value) => {
+      try {
+        JSON.parse(value);
+        return true;
+      } catch {
+        return false;
+      }
+    },
+    { message: "Raw input must be valid JSON" }
+  ),
   is_public: z.boolean(),
-  default_primary: z.string(),
-  default_secondary_color: z.string(),
-  icon: z.string(),
+  default_primary: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
+  default_secondary_color: z
+    .string()
+    .regex(/^#[0-9A-Fa-f]{6}$/, "Invalid hex color"),
+  icon: z.instanceof(File).optional(), // Icon is a File, not a string
 });
 
+type FormValues = z.infer<typeof formSchema>;
+
 export default function GeneralForm() {
+  const templateId = useAppSelector((state) => state.saveForm.templateId);
+  const {
+    data: specificTemplateData,
+    isLoading: isTemplateLoading,
+    error: templateError,
+  } = useGetTemplateQuery(templateId!, { skip: !templateId });
   const { stageRef } = useCanvas();
-
-  function rgbaToHex(color: string): string {
-    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
-
-    if (match) {
-      const [r, g, b] = match.slice(1, 4).map(Number);
-      return (
-        "#" + [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("")
-      );
-    }
-
-    return color;
-  }
-
-  // Function to capture Konva stage as PNG and convert to Blob
-  const captureStageAsPNG = async (): Promise<Blob | null> => {
-    if (!stageRef?.current) {
-      console.warn("Stage reference is not available");
-      return null;
-    }
-
-    try {
-      // Capture the stage as data URL with high quality
-      const dataURL = stageRef.current.toDataURL({
-        mimeType: "image/png",
-        quality: 0.7,
-        pixelRatio: 1,
-      });
-
-      // Convert data URL to Blob
-      const response = await fetch(dataURL);
-      const blob = await response.blob();
-
-      return blob;
-    } catch (error) {
-      console.error("Failed to capture stage as PNG:", error);
-      return null;
-    }
-  };
+  const { data: frameTags, isLoading: isTagsLoading } = useGetAllTagQuery();
+  const [createTemplate, { isLoading: isCreating }] =
+    useCreateTemplateMutation();
+  const [updateTemplate, { isLoading: isUpdating }] =
+    useUpdateTemplateMutation();
+  const dispatch = useDispatch();
 
   const elements = useAppSelector((state) => state.canvas.elements);
   const stageHeight = useAppSelector((state) => state.canvas.stageHeight);
@@ -97,8 +99,12 @@ export default function GeneralForm() {
   const aspectRatio = useAppSelector((state) => state.canvas.aspectRatio);
   const brandingColors = useAppSelector((state) => state.branding.colors);
   const brandingFonts = useAppSelector((state) => state.branding.fontFamilies);
+  // start frames handler
 
-  const handleJSON = (): string => {
+  // end frames handler
+
+  // Memoize JSON generation to avoid recomputation
+  const handleJSON = useCallback(() => {
     const keyMappingsByType = {
       text: {
         backgroundStrokeWidth: "borderWidth",
@@ -140,92 +146,184 @@ export default function GeneralForm() {
       },
     };
     return JSON.stringify(exportData, null, 2);
-  };
+  }, [
+    elements,
+    stageHeight,
+    stageWidth,
+    aspectRatio,
+    brandingColors,
+    brandingFonts,
+  ]);
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Convert RGBA to Hex
+  const rgbaToHex = useCallback((color: string): string => {
+    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+    if (match) {
+      const [r, g, b] = match.slice(1, 4).map(Number);
+      return `#${[r, g, b]
+        .map((x) => x.toString(16).padStart(2, "0"))
+        .join("")}`;
+    }
+    return color.startsWith("#") ? color : "#000000";
+  }, []);
+
+  // Capture Konva stage as PNG
+  const captureStageAsPNG = useCallback(async (): Promise<File | null> => {
+    if (!stageRef?.current) {
+      return null;
+    }
+
+    try {
+      const dataURL = stageRef.current.toDataURL({
+        mimeType: "image/png",
+        quality: 0.8, // Increased quality for better previews
+        pixelRatio: 2, // Higher resolution for clarity
+      });
+
+      const response = await fetch(dataURL);
+      const blob = await response.blob();
+      return new File([blob], "stage-preview.png", { type: "image/png" });
+    } catch (error) {
+      console.error("Failed to capture stage as PNG:", error);
+      return null;
+    }
+  }, [stageRef]);
+
+  // Initialize form with react-hook-form
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       group: "",
-      type: "",
-      category: "",
+      type: "default",
+      category: "commercial_ads",
       tags: [],
-      aspect_ratio: aspectRatio,
+      aspect_ratio: aspectRatio || "9:16",
       raw_input: handleJSON(),
       is_public: true,
       default_primary: rgbaToHex(brandingColors?.primary || "#000000"),
       default_secondary_color: rgbaToHex(
         brandingColors?.secondary || "#ffffff"
       ),
-      icon: "",
+      icon: undefined,
     },
   });
 
-  const [createTemplate, { isLoading }] = useCreateTemplateMutation();
-  const { data: frameTags } = useGetAllTagQuery();
-  const dispatch = useDispatch();
-
-  async function onSubmit(values: z.infer<typeof formSchema>) {
-    try {
-      console.log("Submitting values:", values);
-      console.log("Submitting values:", values);
-
-      // Create FormData object
-      const formData = new FormData();
-
-      // Append all form fields
-      formData.append("name", values.name);
-      formData.append("group", values.group);
-      formData.append("type", values.type);
-      formData.append("category", values.category);
-      values.tags.forEach((tag) => {
-        formData.append("tags", tag.toString());
+  // Reset form when template data changes
+  useEffect(() => {
+    if (specificTemplateData) {
+      form.reset({
+        name: specificTemplateData.name || "",
+        group: specificTemplateData.group || "",
+        type: ["default", "customized", "branded"].includes(
+          specificTemplateData.type
+        )
+          ? (specificTemplateData.type as "default" | "customized" | "branded")
+          : "default",
+        category: [
+          "commercial_ads",
+          "commercial_ads_for_developers",
+          "commercial_ads_for_project",
+          "seasonal_posts",
+          "special_events",
+        ].includes(specificTemplateData.category)
+          ? (specificTemplateData.category as
+              | "commercial_ads"
+              | "commercial_ads_for_developers"
+              | "commercial_ads_for_project"
+              | "seasonal_posts"
+              | "special_events")
+          : "commercial_ads",
+        tags: specificTemplateData.tags || [],
+        is_public: specificTemplateData.is_public ?? true,
+        raw_input: handleJSON(),
+        aspect_ratio: aspectRatio || "9:16",
+        default_primary: rgbaToHex(brandingColors?.primary || "#000000"),
+        default_secondary_color: rgbaToHex(
+          brandingColors?.secondary || "#ffffff"
+        ),
+        icon: undefined,
       });
-      formData.append("aspect_ratio", values.aspect_ratio);
-      formData.append("raw_input", values.raw_input);
-      formData.append("is_public", values.is_public.toString());
-      formData.append("default_primary", values.default_primary);
-      formData.append(
-        "default_secondary_color",
-        values.default_secondary_color
-      );
-
-      // Capture stage as PNG and append to FormData
-      const pngBlob = await captureStageAsPNG();
-      if (pngBlob) {
-        const pngFile = new File([pngBlob], "stage-preview.png", {
-          type: "image/png",
-        });
-        formData.append("icon", pngFile);
-        console.log("Stage PNG captured and added to FormData as File");
-      } else {
-        console.warn("Failed to capture stage PNG");
-      }
-
-      // Log FormData contents for debugging
-      console.log("FormData contents:");
-      for (const [key, value] of formData.entries()) {
-        if (value instanceof Blob) {
-          console.log(`${key}: Blob (${value.size} bytes, ${value.type})`);
-        } else {
-          console.log(`${key}: ${value}`);
-        }
-      }
-      // Uncomment to actually submit
-      const response = await createTemplate(formData).unwrap();
-      console.log("Template created:", response);
-      dispatch(addTemplateId(response.id));
-    } catch (error) {
-      console.error("Failed to create template:", error);
     }
-  }
+  }, [
+    specificTemplateData,
+    form,
+    handleJSON,
+    aspectRatio,
+    brandingColors,
+    rgbaToHex,
+  ]);
 
-  // Function to manually trigger PNG capture (for testing/preview)
-  const handleCapturePreview = async () => {
-    const pngBlob = await captureStageAsPNG();
-    if (pngBlob) {
-      // Create a download link for preview
-      const url = URL.createObjectURL(pngBlob);
+  // Handle tag toggling
+  const toggleTag = useCallback(
+    (tagId: number) => {
+      const currentTags = form.getValues("tags");
+      form.setValue(
+        "tags",
+        currentTags.includes(tagId)
+          ? currentTags.filter((id) => id !== tagId)
+          : [...currentTags, tagId]
+      );
+    },
+    [form]
+  );
+
+  // Get tag by ID
+  const getTagById = useCallback(
+    (id: number) => frameTags?.find((tag) => tag.id === id),
+    [frameTags]
+  );
+
+  // Form submission handler
+  const onSubmit = useCallback(
+    async (values: FormValues, actionType: "addNew" | "update") => {
+      try {
+        const formData = new FormData();
+        formData.append("name", values.name);
+        formData.append("group", values.group);
+        formData.append("type", values.type);
+        formData.append("category", values.category);
+        values.tags.forEach((tag) => formData.append("tags", tag.toString()));
+        formData.append("aspect_ratio", values.aspect_ratio);
+        formData.append("raw_input", values.raw_input);
+        formData.append("is_public", values.is_public.toString());
+        formData.append("default_primary", values.default_primary);
+        formData.append(
+          "default_secondary_color",
+          values.default_secondary_color
+        );
+
+        const iconFile = await captureStageAsPNG();
+        if (iconFile) {
+          formData.append("icon", iconFile);
+        }
+
+        let response;
+        if (actionType === "addNew") {
+          response = await createTemplate(formData).unwrap();
+          dispatch(addTemplateId(response.id));
+        } else if (templateId || actionType === "update") {
+          response = await updateTemplate({
+            id: templateId as number,
+            data: formData,
+          }).unwrap();
+        } else {
+          throw new Error("Template ID is missing for update action");
+        }
+
+        dispatch(addTemplateId(response.id));
+      } catch (error) {
+        console.error("Failed to submit template:", error);
+      }
+    },
+    [captureStageAsPNG, createTemplate, updateTemplate, dispatch, templateId]
+  );
+
+  // Handle preview capture (for debugging)
+  const handleCapturePreview = useCallback(async () => {
+    const file = await captureStageAsPNG();
+    if (file) {
+      const url = URL.createObjectURL(file);
       const link = document.createElement("a");
       link.href = url;
       link.download = "stage-preview.png";
@@ -233,46 +331,54 @@ export default function GeneralForm() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      console.log("Preview PNG downloaded");
     }
-  };
+  }, [captureStageAsPNG]);
 
-  const toggleTag = (tagId: number) => {
-    const currentTags = form.getValues("tags");
-    if (currentTags.includes(tagId)) {
-      form.setValue(
-        "tags",
-        currentTags.filter((id) => id !== tagId)
-      );
-    } else {
-      form.setValue("tags", [...currentTags, tagId]);
-    }
-  };
+  // Loading state
+  if (isTemplateLoading || isTagsLoading) {
+    return (
+      <div className="flex items-center justify-center p-4">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        <p>Loading...</p>
+      </div>
+    );
+  }
 
-  const getTagById = (id: number) => {
-    return frameTags?.find((tag) => tag.id === id);
-  };
+  // Error state
+  if (templateError) {
+    return (
+      <div className="p-4 text-red-500">
+        Failed to load template data. Please try again.
+      </div>
+    );
+  }
 
   return (
-    <div>
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-6">General Form</h1>
 
-      {/* Preview capture button for testing */}
-      <div className="mb-4">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={handleCapturePreview}
-          className="mb-4"
-        >
-          Preview Stage Capture
-        </Button>
-      </div>
+      {/* Preview capture button (for debugging, consider removing in production) */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={handleCapturePreview}
+        className="mb-4"
+      >
+        Preview Stage Capture
+      </Button>
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 w-full"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const submitEvent = e.nativeEvent as SubmitEvent;
+            const actionType =
+              (submitEvent.submitter as HTMLButtonElement)?.name || "addNew";
+            form.handleSubmit((values) =>
+              onSubmit(values, actionType as "addNew" | "update")
+            )(e);
+          }}
+          className="space-y-8"
         >
           <FormField
             control={form.control}
@@ -308,10 +414,7 @@ export default function GeneralForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Type</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select type" />
@@ -334,10 +437,7 @@ export default function GeneralForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Category</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select value={field.value} onValueChange={field.onChange}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select category" />
@@ -417,10 +517,7 @@ export default function GeneralForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Aspect Ratio</FormLabel>
-                <Select
-                  onValueChange={field.onChange}
-                  defaultValue={field.value}
-                >
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select aspect ratio" />
@@ -514,11 +611,33 @@ export default function GeneralForm() {
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Submitting..." : "Submit Template"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={isCreating || isUpdating}
+              name="addNew"
+            >
+              {isCreating
+                ? "Submitting..."
+                : templateId
+                ? "Add As New"
+                : "Submit Template"}
+            </Button>
+            {templateId && (
+              <Button
+                type="submit"
+                disabled={isCreating || isUpdating}
+                variant="secondary"
+                name="update"
+              >
+                {isUpdating ? "Updating..." : "Update Template"}
+              </Button>
+            )}
+          </div>
         </form>
       </Form>
+      <FramesForm />
     </div>
   );
 }
