@@ -44,7 +44,6 @@ export const CanvasProvider: FC<{
         dash: "borderStyle",
         strokeWidth: "borderWidth",
         stroke: "borderColor",
-        fitMode: "objectFit",
       },
     };
 

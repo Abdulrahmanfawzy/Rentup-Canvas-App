@@ -101,9 +101,6 @@ export default function GeneralForm() {
   const brandingFonts = useAppSelector((state) => state.branding.fontFamilies);
   // start frames handler
 
-  // end frames handler
-
-  // Memoize JSON generation to avoid recomputation
   const handleJSON = useCallback(() => {
     const keyMappingsByType = {
       text: {
@@ -115,45 +112,44 @@ export default function GeneralForm() {
         dash: "borderStyle",
         strokeWidth: "borderWidth",
         stroke: "borderColor",
-        fitMode: "objectFit",
+        // ❌ متشيلش fitMode خلاص! خليه زي ما هو، عايزينه يظهر في الـ export
       },
-    };
+  };
 
-    const fallbackMapping = {
-      stroke: "borderColor",
-      strokeWidth: "borderWidth",
-      backgroundStroke: "borderColor",
-      backgroundStrokeWidth: "borderWidth",
-      dashed: "borderStyle",
-    };
+  const fallbackMapping = {
+    stroke: "borderColor",
+    strokeWidth: "borderWidth",
+    backgroundStroke: "borderColor",
+    backgroundStrokeWidth: "borderWidth",
+    dashed: "borderStyle",
+  };
 
-    const transformedElements = transformElementsKeys(
+  const exportData = {
+    elements: transformElementsKeys(
       elements,
       keyMappingsByType,
       fallbackMapping
-    );
+    ),
+    stage: {
+      height: stageHeight,
+      width: stageWidth,
+      aspectRatio: aspectRatio,
+    },
+    branding: {
+      colors: brandingColors,
+      fonts: brandingFonts,
+    },
+  };
 
-    const exportData = {
-      elements: transformedElements,
-      stage: {
-        height: stageHeight,
-        width: stageWidth,
-        aspectRatio: aspectRatio,
-      },
-      branding: {
-        colors: brandingColors,
-        fonts: brandingFonts,
-      },
-    };
-    return JSON.stringify(exportData, null, 2);
-  }, [
-    elements,
-    stageHeight,
-    stageWidth,
-    aspectRatio,
-    brandingColors,
-    brandingFonts,
-  ]);
+  return JSON.stringify(exportData, null, 2);
+}, [
+  elements,
+  stageHeight,
+  stageWidth,
+  aspectRatio,
+  brandingColors,
+  brandingFonts,
+]);
 
   // Convert RGBA to Hex
   const rgbaToHex = useCallback((color: string): string => {
