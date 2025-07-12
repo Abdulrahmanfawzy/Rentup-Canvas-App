@@ -13,88 +13,27 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
   const elements = useSelector((store: any) => store.canvas.elements);
   const globalFrame = elements.find((f: CanvasElement) => f.id === element.frameId);
 
-  // const handleFitModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  //   const newFitMode = e.target.value;
+  const objectFitMap = {
+    fit: "contain",
+    fill: "cover",
+    stretch: "fill",
+  } as const;
 
-  //   const frame = elements.find((f: CanvasElement) => f.id === element.frameId);
-
-  //   const imgW = element.originalWidth; // ✅ مش element.width
-  //   const imgH = element.originalHeight; // ✅ مش element.height
-
-  //   if (frame && imgW && imgH) {
-  //     const frameAspect = frame.width / frame.height;
-  //     const imgAspect = imgW / imgH;
-
-  //     let newWidth, newHeight, offsetX, offsetY;
-
-  //     switch (newFitMode) {
-  //       case "fit":
-  //         if (imgAspect > frameAspect) {
-  //           newWidth = frame.width;
-  //           newHeight = frame.width / imgAspect;
-  //         } else {
-  //           newHeight = frame.height;
-  //           newWidth = frame.height * imgAspect;
-  //         }
-  //         break;
-
-  //       case "fill":
-  //       default:
-  //         if (imgAspect < frameAspect) {
-  //           newWidth = frame.width;
-  //           newHeight = frame.width / imgAspect;
-  //         } else {
-  //           newHeight = frame.height;
-  //           newWidth = frame.height * imgAspect;
-  //         }
-  //         break;
-
-  //       case "stretch":
-  //         newWidth = frame.width;
-  //         newHeight = frame.height;
-  //         break;
-  //     }
-
-  //     console.log(frame);
-      
-
-  //     offsetX = (frame.width - newWidth) / 2;
-  //     offsetY = (frame.height - newHeight) / 2;
-
-  //     dispatch(
-  //       updateElement({
-  //         id: element.id,
-  //         updates: {
-  //           fitMode: newFitMode as CanvasElement["fitMode"],
-  //           x: frame.x + offsetX,
-  //           y: frame.y + offsetY,
-  //           width: newWidth,
-  //           height: newHeight,
-  //         },
-  //       })
-  //     );
-
-  //     dispatch(
-  //       updateElement({
-  //         id: frame.id,
-  //         updates: { fitMode: newFitMode as CanvasElement["fitMode"] },
-  //       })
-  //     );
-
-  //   } else {
-  //     dispatch(
-  //       updateElement({
-  //         id: element.id,
-  //         updates: { fitMode: newFitMode as CanvasElement["fitMode"] },
-  //       })
-  //     );
-  //   }
-  // };
+  const reverseObjectFitMap = {
+    contain: "fit",
+    cover: "fill",
+    fill: "stretch",
+  } as const;
 
   const handleFitModeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-  const newFitMode = e.target.value;
+    const newFitMode = e.target.value as "fit" | "fill" | "stretch";
+    const objectFitValue = objectFitMap[newFitMode];
 
-  const frame = elements.find((f: CanvasElement) => f.id === element.frameId);
+    const isFrame = element.type === "frame";
+    const frame = isFrame
+      ? element
+      : elements.find((el: CanvasElement) => el.id === element.frameId);
+
     const imgW = element.originalWidth;
     const imgH = element.originalHeight;
 
@@ -135,50 +74,50 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
       offsetX = (frame.width - newWidth) / 2;
       offsetY = (frame.height - newHeight) / 2;
 
-      const objectFitValue =
-        newFitMode === "fit" ? "contain" :
-        newFitMode === "fill" ? "cover" :
-        newFitMode === "stretch" ? "fill" : "contain";
-
-      console.log("object-fit:", objectFitValue);
-
+      // ✅ تحديث العنصر الحالي (صورة أو فريم)
       dispatch(
         updateElement({
           id: element.id,
           updates: {
-            fitMode: objectFitValue as CanvasElement["fitMode"],
-            x: frame.x + offsetX,
-            y: frame.y + offsetY,
-            width: newWidth,
-            height: newHeight,
+            fitMode: newFitMode,
+            objectFit: objectFitValue,
+            ...(isFrame
+              ? {}
+              : {
+                  x: frame.x + offsetX,
+                  y: frame.y + offsetY,
+                  width: newWidth,
+                  height: newHeight,
+                }),
           },
         })
       );
 
-      dispatch(
-        updateElement({
-          id: frame.id,
-          updates: { fitMode: objectFitValue as CanvasElement["fitMode"] },
-        })
-      );
-
+      // ✅ لو ده عنصر جوه فريم، نحدث الفريم كمان
+      if (!isFrame && frame) {
+        dispatch(
+          updateElement({
+            id: frame.id,
+            updates: {
+              fitMode: newFitMode,
+              objectFit: objectFitValue,
+            },
+          })
+        );
+      }
     } else {
-
-      const objectFitValue =
-        newFitMode === "fit" ? "contain" :
-        newFitMode === "fill" ? "cover" :
-        newFitMode === "stretch" ? "fill" : "contain";
-
-
+      // حالة بدون frame
       dispatch(
         updateElement({
           id: element.id,
-          updates: { fitMode: objectFitValue as CanvasElement["fitMode"] },
+          updates: {
+            fitMode: newFitMode,
+            objectFit: objectFitValue,
+          },
         })
       );
     }
   };
-
 
   return (
     <div className="space-y-4">
@@ -201,7 +140,9 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
       {globalFrame && (
         <SelectInput
           label="Image Fit Mode"
-          value={element.fitMode || "fill"}
+          value={
+            reverseObjectFitMap[element.objectFit as keyof typeof reverseObjectFitMap] || "fill"
+          }
           options={["fill", "fit", "stretch"]}
           onChange={(val) =>
             handleFitModeChange({
@@ -210,6 +151,7 @@ export function ImageProperties({ element }: { element: CanvasElement }) {
           }
         />
       )}
+
 
       <div className="space-y-1 mt-3">
         <label className="text-sm font-medium">Image Preview</label>

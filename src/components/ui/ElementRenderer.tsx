@@ -969,8 +969,7 @@ export const ElementRenderer = forwardRef<any, Props>(
         const [isMovable, setIsMovable] = useState(false);
 
         if (frame) {
-          const borderRadius = frame.borderRadiusSpecial || 0; // Default border radius, adjust as needed
-
+          const borderRadius = frame.borderRadiusSpecial || 0;
           return (
             <Group
               x={frame.x}

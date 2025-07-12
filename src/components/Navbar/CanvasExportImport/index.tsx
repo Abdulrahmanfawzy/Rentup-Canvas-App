@@ -93,131 +93,6 @@ const CanvasExportImport: FC = () => {
     reader.readAsText(file);
   };
 
-
-  const handleImportViaBackEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      try {
-        const importedData = JSON.parse(reader.result as string);
-        console.log(importedData);
-        if (
-          importedData &&
-          Array.isArray(
-            importedData.results.templates[0].json_template.elements
-          ) &&
-          importedData.results.templates[0].json_template.stage &&
-          importedData.results.templates[0].json_template.stage.height &&
-          importedData.results.templates[0].json_template.stage.width &&
-          importedData.results.templates[0].json_template.stage.aspectRatio
-        ) {
-          // Clone the elements array to avoid mutating the original
-          const elements = [...importedData.results.templates[0].json_template.elements];
-
-          // Handle image elements by replacing frame elements
-          importedData.results.templates[0].frames.forEach((frame: any) => {
-            console.log(frame.assets[0]);
-            // Find the frame element in the elements array
-            const frameIndex = elements.findIndex(
-              (el: any) =>
-                el.frame_position_in_template == frame.frame_position_in_template
-            );
-
-            if (frameIndex !== -1) {
-              const frameElement = elements[frameIndex];
-              console.log(frameElement);
-              
-              const newImageElement = {
-                id: "image_" + frame.frame_id,
-                type: "image",
-                x: frameElement.x,
-                y: frameElement.y,
-                width: frameElement.width,
-                height: frameElement.height,
-                x_percent: frameElement.x_percent,
-                y_percent: frameElement.y_percent,
-                width_percent: frameElement.width_percent,
-                height_percent: frameElement.height_percent,
-                rotation: frameElement.rotation || 0,
-                selected: false,
-                src: `https://api.markomlabs.com${frame.assets[0].image_url}`,
-                originalWidth: frame.assets[0].width || frameElement.width,
-                originalHeight: frame.assets[0].height || frameElement.height,
-                fill: frameElement.fill || "transparent",
-                opacity: frameElement.opacity || 1,
-                frameId: frame.frame_id,
-                fitMode: frameElement.fitMode || "fill",
-                assetType: frameElement.assetType,
-                tags: frameElement.tags || [],
-                visible: frameElement.visible !== undefined ? frameElement.visible : true,
-                borderRadiusSpecial: frameElement.borderRadiusSpecial || 0,
-                borderStyle: frameElement.borderStyle || [0, 0],
-                borderWidth: frameElement.borderWidth || 0,
-                borderColor: frameElement.borderColor || "transparent",
-                objectFit: frameElement.objectFit || "fill",
-              };
-              // Replace the frame element with the new image element at the same index
-              elements[frameIndex] = newImageElement;
-            }
-          });
-
-          dispatch(setElements(elements));
-          dispatch(
-            setStageSize({
-              height: importedData.results.templates[0].json_template.stage.height,
-              width: importedData.results.templates[0].json_template.stage.width,
-            })
-          );
-          dispatch(
-            setAspectRatio(
-              importedData.results.templates[0].json_template.stage.aspectRatio
-            )
-          );
-
-          // Import branding
-          if (importedData.results.templates[0].json_template.branding) {
-            if (
-              importedData.results.templates[0].json_template.branding.colors
-            ) {
-              Object.entries(
-                importedData.results.templates[0].json_template.branding.colors
-              ).forEach(([key, value]) => {
-                dispatch(addColor({ key, value: String(value) }));
-              });
-            }
-
-            if (
-              importedData.results.templates[0].json_template.branding.fonts
-            ) {
-              Object.entries(
-                importedData.results.templates[0].json_template.branding.fonts
-              ).forEach(([key, fontData]: [string, any]) => {
-                dispatch(
-                  addFont({
-                    key,
-                    value: fontData.value,
-                    isFile: fontData.isFile,
-                    variant: fontData.variant,
-                  })
-                );
-              });
-            }
-          }
-        } else {
-          alert("Invalid file format.");
-        }
-      } catch (error) {
-        alert("Failed to import. Invalid JSON.");
-        console.log(error);
-      }
-    };
-
-    reader.readAsText(file);
-  };
-
-
   // const handleImportViaBackEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
   //   const file = e.target.files?.[0];
   //   if (!file) return;
@@ -241,8 +116,9 @@ const CanvasExportImport: FC = () => {
   //         const elements = [...importedData.results.templates[0].json_template.elements];
 
   //         // Handle image elements by replacing frame elements
-  //         // داخل handleImportViaBackEnd بدل الكود اللي بيحط newImage
   //         importedData.results.templates[0].frames.forEach((frame: any) => {
+  //           console.log(frame.assets[0]);
+  //           // Find the frame element in the elements array
   //           const frameIndex = elements.findIndex(
   //             (el: any) =>
   //               el.frame_position_in_template == frame.frame_position_in_template
@@ -250,25 +126,42 @@ const CanvasExportImport: FC = () => {
 
   //           if (frameIndex !== -1) {
   //             const frameElement = elements[frameIndex];
+  //             console.log(frameElement);
 
-  //             // دمج الصورة جوه الفريم
-  //             elements[frameIndex] = {
-  //               ...frameElement,
-  //               type: "frame", // تأكيد إنه فريم
-  //               imageData: {
-  //                 src: `https://api.markomlabs.com${frame.assets?.[0]?.image_url}`,
-  //                 originalWidth: frame.assets?.[0]?.width || frameElement.width,
-  //                 originalHeight: frame.assets?.[0]?.height || frameElement.height,
-  //                 fitMode: frameElement.fitMode || "fill",
-  //                 objectFit: frameElement.objectFit || "fill",
-  //                 opacity: frameElement.opacity ?? 1,
-  //               },
+  //             const newImageElement = {
+  //               id: "image_" + frame.frame_id,
+  //               type: "image",
+  //               x: frameElement.x,
+  //               y: frameElement.y,
+  //               width: frameElement.width,
+  //               height: frameElement.height,
+  //               x_percent: frameElement.x_percent,
+  //               y_percent: frameElement.y_percent,
+  //               width_percent: frameElement.width_percent,
+  //               height_percent: frameElement.height_percent,
+  //               rotation: frameElement.rotation || 0,
+  //               selected: false,
+  //               src: `https://api.markomlabs.com${frame.assets[0].image_url}`,
+  //               originalWidth: frame.assets[0].width || frameElement.width,
+  //               originalHeight: frame.assets[0].height || frameElement.height,
+  //               fill: frameElement.fill || "transparent",
+  //               opacity: frameElement.opacity || 1,
+  //               frameId: frame.frame_id,
+  //               fitMode: frameElement.fitMode || "fill",
+  //               assetType: frameElement.assetType,
+  //               tags: frameElement.tags || [],
+  //               visible: frameElement.visible !== undefined ? frameElement.visible : true,
+  //               borderRadiusSpecial: frameElement.borderRadiusSpecial || 0,
+  //               borderStyle: frameElement.borderStyle || [0, 0],
+  //               borderWidth: frameElement.borderWidth || 0,
+  //               borderColor: frameElement.borderColor || "transparent",
+  //               objectFit: frameElement.objectFit || "fill",
   //             };
+  //             // Replace the frame element with the new image element at the same index
+  //             elements[frameIndex] = newImageElement;
   //           }
   //         });
 
-
-  //         console.log("elements", elements);
   //         dispatch(setElements(elements));
   //         dispatch(
   //           setStageSize({
@@ -323,6 +216,411 @@ const CanvasExportImport: FC = () => {
   //   reader.readAsText(file);
   // };
 
+  // with frames
+
+  // const handleImportViaBackEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+  //   reader.onload = () => {
+  //     try {
+  //       const importedData = JSON.parse(reader.result as string);
+  //       console.log(importedData);
+  //       if (
+  //         importedData &&
+  //         Array.isArray(
+  //           importedData.results.templates[0].json_template.elements
+  //         ) &&
+  //         importedData.results.templates[0].json_template.stage &&
+  //         importedData.results.templates[0].json_template.stage.height &&
+  //         importedData.results.templates[0].json_template.stage.width &&
+  //         importedData.results.templates[0].json_template.stage.aspectRatio
+  //       ) {
+  //         // Clone the elements array to avoid mutating the original
+  //         const elements = [...importedData.results.templates[0].json_template.elements];
+
+  //         importedData.results.templates[0].frames.forEach((frame: any) => {
+  // const frameIndex = elements.findIndex(
+  //   (el: any) =>
+  //     el.frame_position_in_template == frame.frame_position_in_template
+  // );
+
+  // if (frameIndex !== -1) {
+  //   const frameElement = elements[frameIndex];
+
+  //   // عدل الفريم
+  //   elements[frameIndex] = {
+  //     ...frameElement,
+  //     type: "frame",
+  //   };
+
+  //   // أضف عنصر صورة مرتبط بالفريم
+  //   if (frame.assets?.[0]?.image_url) {
+  //     const imageElement = {
+  //       id: `image-${frameElement.id}`,
+  //       type: "image",
+  //       frameId: frameElement.id, // مهم لربطه بالفريم
+  //       x: frameElement.x,
+  //       y: frameElement.y,
+  //       width: frameElement.width,
+  //       height: frameElement.height,
+  //       src: `https://api.markomlabs.com${frame.assets[0].image_url}`,
+  //       originalWidth: frame.assets[0].width || frameElement.width,
+  //       originalHeight: frame.assets[0].height || frameElement.height,
+  //       fitMode: frameElement.fitMode || "fill",
+  //       opacity: frameElement.opacity ?? 1,
+  //     };
+
+  //     elements.push(imageElement);
+  //   }
+  // }
+  //         });
+
+  //         dispatch(setElements(elements));
+  //         dispatch(
+  //           setStageSize({
+  //             height: importedData.results.templates[0].json_template.stage.height,
+  //             width: importedData.results.templates[0].json_template.stage.width,
+  //           })
+  //         );
+  //         dispatch(
+  //           setAspectRatio(
+  //             importedData.results.templates[0].json_template.stage.aspectRatio
+  //           )
+  //         );
+
+  //         // Import branding
+  //         if (importedData.results.templates[0].json_template.branding) {
+  //           if (
+  //             importedData.results.templates[0].json_template.branding.colors
+  //           ) {
+  //             Object.entries(
+  //               importedData.results.templates[0].json_template.branding.colors
+  //             ).forEach(([key, value]) => {
+  //               dispatch(addColor({ key, value: String(value) }));
+  //             });
+  //           }
+
+  //           if (
+  //             importedData.results.templates[0].json_template.branding.fonts
+  //           ) {
+  //             Object.entries(
+  //               importedData.results.templates[0].json_template.branding.fonts
+  //             ).forEach(([key, fontData]: [string, any]) => {
+  //               dispatch(
+  //                 addFont({
+  //                   key,
+  //                   value: fontData.value,
+  //                   isFile: fontData.isFile,
+  //                   variant: fontData.variant,
+  //                 })
+  //               );
+  //             });
+  //           }
+  //         }
+  //       } else {
+  //         alert("Invalid file format.");
+  //       }
+  //     } catch (error) {
+  //       alert("Failed to import. Invalid JSON.");
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   reader.readAsText(file);
+  // };
+  
+  const handleImportViaBackEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  // 🧠 هنا المابنج
+  const mapFitMode = (backendFit: string): "fit" | "fill" | "stretch" => {
+    switch (backendFit) {
+      case "contain":
+        return "fit";
+      case "cover":
+        return "fill";
+      case "stretch":
+        return "stretch";
+      default:
+        return "fill";
+    }
+  };
+
+  reader.onload = () => {
+    try {
+      const importedData = JSON.parse(reader.result as string);
+      console.log("Imported Data:", importedData);
+
+      if (
+        importedData &&
+        Array.isArray(importedData.results.templates[0].json_template.elements) &&
+        importedData.results.templates[0].json_template.stage &&
+        importedData.results.templates[0].json_template.stage.height &&
+        importedData.results.templates[0].json_template.stage.width &&
+        importedData.results.templates[0].json_template.stage.aspectRatio
+      ) {
+        const elements = [...importedData.results.templates[0].json_template.elements];
+
+        // 💡 معالجة الصور داخل الفريمز
+        importedData.results.templates[0].frames.forEach((frame: any) => {
+          const frameIndex = elements.findIndex(
+            (el: any) =>
+              el.frame_position_in_template == frame.frame_position_in_template
+          );
+
+          if (frameIndex !== -1) {
+            const frameElement = elements[frameIndex];
+
+            // تعديل الفريم
+            elements[frameIndex] = {
+              ...frameElement,
+              type: "frame",
+              zIndex: 1, // الفريم فوق الصورة
+            };
+
+            // إضافة صورة مرتبطة بالفريم
+            if (frame.assets?.[0]?.image_url) {
+              console.log(frame);
+              const fitMode = mapFitMode(frame.objectFit || frame.fitMode || "fill");
+              console.log(fitMode);
+
+              const imageElement = {
+                id: `image-${frameElement.id}`,
+                type: "image",
+                frameId: frameElement.id,
+                x: frameElement.x,
+                y: frameElement.y,
+                width: frameElement.width,
+                height: frameElement.height,
+                src: `https://api.markomlabs.com${frame.assets[0].image_url}`,
+                originalWidth: frame.assets[0].width || frameElement.width,
+                originalHeight: frame.assets[0].height || frameElement.height,
+                fitMode,
+                opacity: frameElement.opacity ?? 1,
+                zIndex: 0, // الصورة في الخلفية
+              };
+
+              // إضافة الصورة بعد الفريم مباشرة
+              elements.splice(frameIndex + 1, 0, imageElement);
+            }
+          }
+        });
+
+        // 🟢 فرز العناصر حسب zIndex لو موجود
+        elements.sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+
+        // 🟢 Apply to Redux
+        dispatch(setElements([...elements]));
+        dispatch(
+          setStageSize({
+            height: importedData.results.templates[0].json_template.stage.height,
+            width: importedData.results.templates[0].json_template.stage.width,
+          })
+        );
+        dispatch(
+          setAspectRatio(
+            importedData.results.templates[0].json_template.stage.aspectRatio
+          )
+        );
+
+        // 🎨 Import branding
+        if (importedData.results.templates[0].json_template.branding) {
+          const branding = importedData.results.templates[0].json_template.branding;
+
+          if (branding.colors) {
+            Object.entries(branding.colors).forEach(([key, value]) => {
+              dispatch(addColor({ key, value: String(value) }));
+            });
+          }
+
+          if (branding.fonts) {
+            Object.entries(branding.fonts).forEach(([key, fontData]: [string, any]) => {
+              dispatch(
+                addFont({
+                  key,
+                  value: fontData.value,
+                  isFile: fontData.isFile,
+                  variant: fontData.variant,
+                })
+              );
+            });
+          }
+        }
+      } else {
+        alert("Invalid file format.");
+      }
+    } catch (error) {
+      alert("Failed to import. Invalid JSON.");
+      console.error("Import error:", error);
+    }
+  };
+
+  reader.readAsText(file);
+};
+
+
+  // const handleImportViaBackEnd = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   const file = e.target.files?.[0];
+  //   if (!file) return;
+
+  //   const reader = new FileReader();
+  //   reader.onload = async () => {
+  //     try {
+  //       const importedData = JSON.parse(reader.result as string);
+  //       console.log(importedData);
+
+  //       if (
+  //         importedData &&
+  //         Array.isArray(
+  //           importedData.results.templates[0].json_template.elements
+  //         ) &&
+  //         importedData.results.templates[0].json_template.stage &&
+  //         importedData.results.templates[0].json_template.stage.height &&
+  //         importedData.results.templates[0].json_template.stage.width &&
+  //         importedData.results.templates[0].json_template.stage.aspectRatio
+  //       ) {
+  //         // Clone the elements array to avoid mutating the original
+  //         const elements = [
+  //           ...importedData.results.templates[0].json_template.elements,
+  //         ];
+
+  //         // Handle image elements by replacing frame elements
+  //         importedData.results.templates[0].frames.forEach((frame: any) => {
+  //           const frameIndex = elements.findIndex(
+  //             (el: any) =>
+  //               el.frame_position_in_template ==
+  //               frame.frame_position_in_template
+  //           );
+
+  //           if (frameIndex !== -1) {
+  //             const frameElement = elements[frameIndex];
+  //             const newImageElement = {
+  //               id: "image_" + frame.frame_id,
+  //               type: "image",
+  //               x: frameElement.x,
+  //               y: frameElement.y,
+  //               width: frameElement.width,
+  //               height: frameElement.height,
+  //               x_percent: frameElement.x_percent,
+  //               y_percent: frameElement.y_percent,
+  //               width_percent: frameElement.width_percent,
+  //               height_percent: frameElement.height_percent,
+  //               rotation: frameElement.rotation || 0,
+  //               selected: false,
+  //               src: `https://api.markomlabs.com${frame.assets[0].image_url}`,
+  //               originalWidth: frame.assets[0].width || frameElement.width,
+  //               originalHeight: frame.assets[0].height || frameElement.height,
+  //               fill: frameElement.fill || "transparent",
+  //               opacity: frameElement.opacity || 1,
+  //               frameId: frame.frame_id,
+  //               fitMode: frameElement.fitMode || "fill",
+  //               assetType: frameElement.assetType,
+  //               tags: frameElement.tags || [],
+  //               visible:
+  //                 frameElement.visible !== undefined
+  //                   ? frameElement.visible
+  //                   : true,
+  //               borderRadiusSpecial: frameElement.borderRadiusSpecial || 0,
+  //               borderStyle: frameElement.borderStyle || [0, 0],
+  //               borderWidth: frameElement.borderWidth || 0,
+  //               borderColor: frameElement.borderColor || "transparent",
+  //               objectFit: frameElement.objectFit || "fill",
+  //             };
+  //             elements[frameIndex] = newImageElement;
+  //           }
+  //         });
+
+  //         dispatch(setElements(elements));
+  //         dispatch(
+  //           setStageSize({
+  //             height:
+  //               importedData.results.templates[0].json_template.stage.height,
+  //             width:
+  //               importedData.results.templates[0].json_template.stage.width,
+  //           })
+  //         );
+  //         dispatch(
+  //           setAspectRatio(
+  //             importedData.results.templates[0].json_template.stage.aspectRatio
+  //           )
+  //         );
+
+  //         // Import branding
+  //         if (importedData.results.templates[0].json_template.branding) {
+  //           if (
+  //             importedData.results.templates[0].json_template.branding.colors
+  //           ) {
+  //             Object.entries(
+  //               importedData.results.templates[0].json_template.branding.colors
+  //             ).forEach(([key, value]) => {
+  //               dispatch(addColor({ key, value: String(value) }));
+  //             });
+  //           }
+
+  //           // Load Google Fonts dynamically
+  //           if (
+  //             importedData.results.templates[0].json_template.branding.fonts
+  //           ) {
+  //             const fonts =
+  //               importedData.results.templates[0].json_template.branding.fonts;
+  //             const fontPromises: Promise<void>[] = [];
+
+  //             Object.entries(fonts).forEach(
+  //               ([key, fontData]: [string, any]) => {
+  //                 const fontName = fontData.value; // Assuming value is the font name, e.g., "Roboto"
+  //                 const fontUrl = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(
+  //                   fontName
+  //                 )}:wght@400;700&display=swap`;
+
+  //                 // Load the font dynamically
+  //                 const link = document.createElement("link");
+  //                 link.href = fontUrl;
+  //                 link.rel = "stylesheet";
+  //                 document.head.appendChild(link);
+
+  //                 // Use FontFace API to ensure the font is loaded
+  //                 const font = new FontFace(fontName, `url(${fontUrl})`);
+  //                 fontPromises.push(
+  //                   font
+  //                     .load()
+  //                     .then((loadedFont) => {
+  //                       document.fonts.add(loadedFont);
+  //                       dispatch(
+  //                         addFont({
+  //                           key,
+  //                           value: fontName,
+  //                           isFile: fontData.isFile,
+  //                           variant: fontData.variant,
+  //                         })
+  //                       );
+  //                     })
+  //                     .catch((err) => {
+  //                       console.error(`Failed to load font ${fontName}:`, err);
+  //                     })
+  //                 );
+  //               }
+  //             );
+
+  //             // Wait for all fonts to load before rendering
+  //             await Promise.all(fontPromises);
+  //           }
+  //         } else {
+  //           alert("Invalid file format.");
+  //         }
+  //       }
+  //     } catch (error) {
+  //       alert("Failed to import. Invalid JSON.");
+  //       console.log(error);
+  //     }
+  //   };
+
+  //   reader.readAsText(file);
+  // };
 
   return (
     <>
