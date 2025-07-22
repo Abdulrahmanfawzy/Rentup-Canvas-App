@@ -1,6 +1,6 @@
 // src/services/api.ts
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-export const BASE_API_URL = "https://djangoapi.markomlabs.com";
+export const BASE_API_URL = "https://api.markomlabs.com";
 export const api = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
