@@ -15,6 +15,8 @@ interface Tag {
 
 interface Frame {
   assetType: string | null;
+  fitMode: string | null;
+  objectFit: string | null;
   tags: number[];
   frame_position_in_template: number | null;
 }
@@ -22,6 +24,8 @@ interface Frame {
 interface CanvasElement {
   type: string;
   assetType?: string;
+  fitMode?: string | null;
+  objectFit?: string | null;
   tags?: string[];
   frame_position_in_template?: number;
 }
@@ -53,6 +57,9 @@ export default function FramesForm() {
     return item ? item.id : null;
   };
 
+  console.log(elements);
+  
+
   // Generate frames array
   const frames = (): Frame[] => {
     const result: Frame[] = [];
@@ -61,6 +68,8 @@ export default function FramesForm() {
       if (el.type === "frame") {
         result.push({
           assetType: el.assetType || null,
+          fitMode: el.fitMode || null,
+          objectFit: el.objectFit || null,
           tags:
             el.tags
               ?.map((tag) => getIdByTag(tag))
@@ -72,9 +81,10 @@ export default function FramesForm() {
 
     return result;
   };
-
+  
   // Handle form submission
   const handleSubmit = async () => {
+    console.log(frames);
     if (!templateId) {
       console.error(
         "Template ID is missing. Please submit the general form first."
@@ -94,8 +104,13 @@ export default function FramesForm() {
         frame_position_in_template: frame.frame_position_in_template ?? 0,
         template: templateId,
         type: frame.assetType || "image",
+        fitMode: frame.fitMode,
+        objectFit: frame.objectFit,
         tags: frame.tags,
       };
+
+      console.log(frame);
+
 
       try {
         const res = await createFrame(payload).unwrap();
@@ -104,7 +119,7 @@ export default function FramesForm() {
         console.error("Error sending frame:", error);
       }
     }
-  };
+  };  
 
   if (isTagsLoading) {
     return <p>Loading tags...</p>;
@@ -174,6 +189,26 @@ export default function FramesForm() {
                 <Input
                   value={frame.frame_position_in_template ?? "Not Set"}
                   placeholder="Frame Position"
+                  disabled
+                />
+              </FormControl>
+            </FormItem>
+            <FormItem>
+              <FormLabel>Frame FitMode</FormLabel>
+              <FormControl>
+                <Input
+                  value={frame.fitMode as ""}
+                  placeholder="Frame FitMode"
+                  disabled
+                />
+              </FormControl>
+            </FormItem>
+            <FormItem>
+              <FormLabel>Frame ObjectFit</FormLabel>
+              <FormControl>
+                <Input
+                  value={frame.objectFit ?? ""}
+                  placeholder="Frame ObjectFit"
                   disabled
                 />
               </FormControl>

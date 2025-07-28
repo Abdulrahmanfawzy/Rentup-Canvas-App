@@ -56,7 +56,7 @@ const formSchema = z.object({
     "special_events",
   ]),
   tags: z.array(z.number()),
-  aspect_ratio: z.enum(["9:16", "1:1"]),
+  aspect_ratio: z.enum(["9:16", "1:1","Square","SQUARE"]),
   raw_input: z.string().refine(
     (value) => {
       try {
@@ -508,7 +508,7 @@ export default function GeneralForm() {
           />
 
           <FormField
-            control={form.control}
+            // control={form.control}
             name="aspect_ratio"
             render={({ field }) => (
               <FormItem>
@@ -522,6 +522,8 @@ export default function GeneralForm() {
                   <SelectContent>
                     <SelectItem value="9:16">9:16</SelectItem>
                     <SelectItem value="1:1">1:1</SelectItem>
+                    <SelectItem value="SQUARE">Square</SelectItem>
+                    <SelectItem value="Vertical">vertical</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
