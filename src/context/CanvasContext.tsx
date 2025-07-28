@@ -200,6 +200,8 @@ export const CanvasProvider: FC<{
   const handleExportSummary = () => {
     const frames: {
       assetType: string | null;
+      fitMode: string | null;
+      objectFit: string | null;
       tags: string[];
       frame_position_in_template: number | null;
     }[] = [];
@@ -214,12 +216,16 @@ export const CanvasProvider: FC<{
       if (el.type === "frame") {
         const frameEl = el as {
           assetType?: string;
+          fitMode?: string;
+          objectFit?: string;
           tags?: string[];
           frame_position_in_template?: number;
         };
-
+        
         frames.push({
           assetType: frameEl.assetType || null,
+          fitMode: frameEl.fitMode || null,
+          objectFit: frameEl.objectFit || null,
           tags: frameEl.tags || [],
           frame_position_in_template:
             frameEl.frame_position_in_template ?? null,
